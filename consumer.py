@@ -52,6 +52,18 @@ class Consumer:
 	'''MQTT consumer that subscribes to a topic and appends received messages to a JSONL file.'''
 	static_counter = 0 # static counter to generate unique MQTT client IDs for multiple consumer instances
 
+	@staticmethod
+	# handles compatibility with different versions of paho-mqtt library by checking for the presence of the CallbackAPIVersion
+	#  attribute and using it to create the MQTT client accordingly
+	def _create_mqtt_client(client_id: str, clean_session: bool) -> mqtt.Client:
+		if hasattr(mqtt, "CallbackAPIVersion"):
+			return mqtt.Client(
+				callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+				client_id=client_id,
+				clean_session=clean_session,
+			)
+		return mqtt.Client(client_id=client_id, clean_session=clean_session)
+
 	def __init__(self, args, metrics, stop_flag):
 		self.args = args
 		self.metrics = metrics
@@ -63,7 +75,7 @@ class Consumer:
 
 		client_id = f"C{Consumer.static_counter}"
 		Consumer.static_counter += 1
-		self.client = mqtt.Client(client_id=client_id, clean_session=self.args.clean_session)
+		self.client = self._create_mqtt_client(client_id=client_id, clean_session=self.args.clean_session)
 		self.client.on_connect = self.on_connect
 		self.client.on_message = self.on_message
 

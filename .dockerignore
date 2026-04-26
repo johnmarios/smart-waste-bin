@@ -3,11 +3,17 @@ __pycache__/
 
 # Virtual environment directories
 venv/
+.venv/
+env/
 
 # Output data files
 output/
 results/
+data/
 *.jsonl
+
+# Compiled Python files
+*.pyc
 
 # Version control directories
 .git/

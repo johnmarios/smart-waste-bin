@@ -1,25 +1,25 @@
-# Slim Python base image
+# get a lightweight Python image
 FROM python:3.11-slim
 
-# buffering
+# whatever print statements we have will be displayed immediately
 ENV PYTHONUNBUFFERED=1
 
-# Set the working directory inside the container
-WORKDIR /lab4
+# set a working directory for the app inside the container
+WORKDIR /app
 
-# Copy requirements file and install dependencies
-COPY requirements.txt .
+# copy the requirements file inside the container and install dependencies
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the library folder
+# copy the rest of the app's code inside the container in the /app directory
 COPY pirlib/ pirlib/
+COPY models/ models/
+COPY producer.py consumer.py ./
 
-# Copy the pipeline entry point script
-COPY run_pipeline.py .
+# create a directory for the app where consumer can store data
+RUN mkdir -p /data
 
-# Create output directory
-RUN mkdir -p /lab4/output
-
-# Default command when the container starts
-CMD ["python", "run_pipeline.py", "--out", "/lab4/output/results.json", "--device-id", "dev1", "--pin", "17","--verbose"]
+# Default command; docker-compose overrides this per service
+# so by default, the producer will run with simulation and verbose output, connecting to the broker service
+CMD ["python", "producer.py", "--broker", "broker", "--simulate", "--verbose"]
 
