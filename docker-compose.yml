@@ -11,12 +11,16 @@ services:
     ports: 
       - "1883:1883"
 
-    # we will create a custom mosquitto.conf file on the fly when the container starts,
-    # allowing anonymous access for simplicity, so we won't need extra files
-    command: >
-      sh -c "printf 'listener 1883\nallow_anonymous true\n' > /mosquitto/config/mosquitto.conf
-      && exec mosquitto -c /mosquitto/config/mosquitto.conf"
-
+    # write a minimal valid config and then start broker
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        cat > /mosquitto/config/mosquitto.conf <<'EOF'
+        listener 1883
+        allow_anonymous true
+        EOF
+        exec mosquitto -c /mosquitto/config/mosquitto.conf
     # set resource limits and restart policy for the broker
     deploy:
       resources:
@@ -79,7 +83,9 @@ services:
     privileged: true
     devices:
       - /dev/gpiomem0:/dev/gpiomem
+      - /dev/gpiomem0:/dev/gpiomem0
       - /dev/gpiochip0:/dev/gpiochip0
+      - /dev/gpiochip4:/dev/gpiochip4
     command: >
       python producer.py
       --broker broker
