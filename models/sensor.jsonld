@@ -1,0 +1,69 @@
+{
+    "@context": {
+    "@vocab": "https://schema.org/",
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "ssn": "http://www.w3.org/ns/ssn/",
+    "ck801": "https://gbouloukakis.com/courses/ck801-s26/labs/data_models/",
+
+    "sosa:isHostedBy": { "@type": "@id" },
+    "ck801:deployedIn": { "@type": "@id" }
+    },
+
+    "@id": "urn:dev:team-06:pir-01",
+    "@type": ["sosa:Sensor","ck801:PirSensor"],
+
+    "name": "pir motion-sensor-01",
+    "description": "HC-SR501 passive infrared motion sensor",
+    "sameAs": "https://arduwiki.com/wiki/Infrared_Human_Body_Motion_Sensor(HC-SR501)",
+
+    "sosa:isHostedBy": { 
+        "@id": "urn:dev:team-06:wastebin-01"
+     },
+
+    "ck801:deployedIn": {
+    "@id": "urn:dev:team-06:environment-01"
+    },
+
+    "ck801:sensingPrinciple": "passive infrared",
+    "ck801:connection": "physical pins",
+
+    "ck801:pins": {
+        "VCC": 2,
+        "GND": 6,
+        "OUT": 11
+    },
+
+    "ck801:operationMode": {
+        "VCC": {
+            "value": 5,
+            "unit": "V"
+        },
+        "GND": {
+            "value": 0,
+            "unit": "V"
+        },
+        "OUT": "GPIO-17"
+    },
+
+    "ck801:range": {
+        "min": 2,
+        "max": 7,
+        "unit": "m"
+    },
+
+    "ck801:cooldown": {
+        "duration": 5, 
+        "unit": "s" 
+        },
+
+    "ck801:operatingTemperature": {
+        "min": -15, 
+        "max": 70, 
+        "unit": "°C" 
+    },
+    "ck801:environment": "Indoor",
+
+    "ck801:status": "active"
+}
+
+

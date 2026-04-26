@@ -1,0 +1,34 @@
+{
+    "@context": {
+    "@vocab": "https://schema.org/",
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "bot": "https://w3id.org/bot#",
+    "geo": "http://www.opengis.net/ont/geosparql#",
+    "ck801": "https://gbouloukakis.com/courses/ck801-s26/labs/data_models/",
+
+    "sosa:hosts": { "@type": "@id" },
+    "ck801:containsWastebins": { "@type": "@id" }
+    },
+
+    "@id": "urn:dev:team-06:environment-01",
+    "@type": ["bot:Space", "Place"],
+
+    "name": "Kypes",
+    "description": "classroom where wastebin-01 is deployed.",
+
+    "geo:hasGeometry": {
+    "geo:asWKT": "POINT(23.7283 37.9838)"
+    },
+    "ck801:environmentType": "indoor",
+    "ck801:zone": "Zone A",
+    "ck801:traffic": "high",
+
+    "sosa:hosts": [
+    { "@id": "urn:dev:team-06:pir-01" }
+    ],
+
+    "ck801:containsWastebins": [
+    { "@id": "urn:dev:team-06:wastebin-01" }
+    ]
+
+}

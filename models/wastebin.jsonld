@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "ssn": "http://www.w3.org/ns/ssn/",
+    "ck801": "https://gbouloukakis.com/courses/ck801-s26/labs/data_models/",
+
+    "sosa:hosts": { "@type": "@id" },
+    "ck801:locatedIn": { "@type": "@id" }
+    },
+    "@id": "urn:dev:team-06:wastebin-01",
+    "@type": ["Product", "Wastebin"],
+
+    "name": "Wastebin 01",
+    "description": "plastic wastebin",
+
+    "ck801:material": "plastic",
+    "ck801:capacityLiters": 0.5,
+
+    "ck801:dimensions": { 
+        "height": 12.5, 
+        "width": 6, 
+        "depth": 6.5, 
+        "unit": "cm"
+    },
+
+    "ck801:color": "grey",
+    "ck801:wasteType": "paper",
+
+    "ck801:collectionZone": "Zone A",
+    "ck801:status": "active",
+
+    "sosa:hosts": [
+    { "@id": "urn:dev:team-06:pir-01" }
+    ],
+
+    "ck801:locatedIn": { 
+        "@id": "urn:dev:team-06:environment-01" 
+    }   
+}

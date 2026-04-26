@@ -1,0 +1,16 @@
+# Python bytecode cache directories
+__pycache__/
+
+# Virtual environment directories
+venv/
+
+# Output data files
+output/
+results/
+*.jsonl
+
+# Version control directories
+.git/
+.gitignore
+
+

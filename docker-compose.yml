@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  motion-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    privileged: true
+
+    devices:
+    - "/dev/gpiomem:/dev/gpiomem"
+    - "/dev/gpiochip0:/dev/gpiochip0"
+    - "/dev/gpiochip4:/dev/gpiochip4"
+    - "/dev/gpiochip10:/dev/gpiochip10"
+    - "/dev/gpiochip11:/dev/gpiochip11"
+    - "/dev/gpiochip12:/dev/gpiochip12"
+    - "/dev/gpiochip13:/dev/gpiochip13"
+
+    volumes:
+    - pipeline-data:/data
+    command: >
+      python run_pipeline.py
+      --device-id pir-docker-01
+      --pin 17
+      --sample-interval 0.1
+      --cooldown 5
+      --min-high 0.2
+      --queue-size 10
+      --consumer-delay 0.5
+      --duration 60
+      --out /data/motion_pipeline.jsonl
+      --verbose
+
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.50"
+
+    restart: unless-stopped
+
+volumes:
+  pipeline-data:

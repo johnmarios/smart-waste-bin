@@ -1,0 +1,59 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "ck801": "https://gbouloukakis.com/courses/ck801-s26/labs/data_models/",
+    "pipeline":"https://github.com/johnmarios/advanced-programming-techniques-lab/blob/main/docs/ontology.md#",
+
+    "event_time": {
+      "@id": "sosa:resultTime",
+      "@type": "xsd:dateTime"
+    },
+
+    "device_id": {
+      "@id": "sosa:madeBySensor",
+      "@type": "@id"
+    },
+
+    "event_type": {
+      "@id": "pipeline:eventType",
+      "@type": "xsd:string"
+    },
+
+    "wastebin_id": {
+      "@id": "pipeline:wastebinId",
+      "@type": "@id"
+    },
+
+    "environment_id": {
+      "@id": "pipeline:environmentId",
+      "@type": "@id"
+    },
+
+    "motion_state": {
+      "@id": "pipeline:motionState",
+      "@type": "xsd:string"
+    },
+
+    "seq": {
+      "@id": "pipeline:sequenceNumber",
+      "@type": "xsd:integer"
+    },
+
+    "run_id": {
+      "@id": "pipeline:runId",
+      "@type": "xsd:string"
+    },
+
+    "ingest_time": {
+      "@id": "pipeline:ingestTime",
+      "@type": "xsd:dateTime"
+    },
+
+    "pipeline_latency_ms": {
+      "@id": "pipeline:latencyMs",
+      "@type": "xsd:decimal"
+    }
+  }
+}
