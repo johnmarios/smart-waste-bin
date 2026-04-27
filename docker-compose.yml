@@ -116,6 +116,7 @@ services:
       python producer.py
       --broker broker
       --client-id producer-main
+      --seq-start 0
       --topic environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events
       --pin 17
       --duration 3000
@@ -145,6 +146,7 @@ services:
       python producer.py
       --broker broker
       --client-id producer-sim
+      --seq-start 0
       --topic environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events
       --simulate
       --duration 3000
