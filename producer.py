@@ -81,6 +81,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--wastebin-id", default="wastebin-01")
     parser.add_argument("--environment-id", default="environment-01")
     parser.add_argument("--broker", default="localhost")
+    parser.add_argument("--client-id", required=True)
     parser.add_argument("--port", type=int, default=1883)
     parser.add_argument("--topic", default="environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events")
     parser.add_argument("--qos", type=int, default=1, choices=[0, 1, 2])
@@ -88,6 +89,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pin", type=int)
     parser.add_argument("--simulate", action="store_true")
     parser.add_argument("--simulate-prob", type=float, default=0.1)
+    parser.add_argument("--seq-start", type=int, default=0)
     parser.add_argument("--sample-interval", type=float, default=0.1) # Time interval between sensor readings in seconds (default: 0.1s)
     parser.add_argument("--cooldown", type=float, default=5.0) # Cooldown period in seconds after motion is detected during which no new motion events will be generated (default: 5s)
     parser.add_argument("--min-high", type=float, default=0.0) # Minimum duration in seconds that the sensor signal must be high to consider it a valid motion event (default: 0s, i.e. any high signal is valid)
@@ -113,6 +115,8 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--port must be in range [1, 65535]")
     if args.simulate_prob < 0 or args.simulate_prob > 1:
         raise ValueError("--simulate-prob must be in range [0, 1]")
+    if args.seq_start < 0:
+        raise ValueError("--seq-start must be >= 0")
 
 
 class SimulatedPirSampler:
@@ -128,10 +132,8 @@ class Producer:
     '''MQTT producer that reads from a PIR sensor, interprets the readings to detect motion events, 
     and publishes the events as JSON messages to an MQTT topic.'''
 
-    static_counter = 0
-
     @staticmethod
-    def _create_mqtt_client(client_id: str, clean_session: bool) -> mqtt.Client:
+    def create_mqtt_client(client_id: str, clean_session: bool) -> mqtt.Client:
         if hasattr(mqtt, "CallbackAPIVersion"):
             return mqtt.Client(
                 callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -147,11 +149,9 @@ class Producer:
         self.interpreter = interpreter
         self.stop_flag = stop_flag
         self.run_id = create_run_id()
-        self.seq = 0
+        self.seq = args.seq_start
 
-        client_id = f"P{Producer.static_counter}"
-        Producer.static_counter += 1
-        self.client = self._create_mqtt_client(client_id=client_id, clean_session=self.args.clean_session)
+        self.client = self.create_mqtt_client(client_id=self.args.client_id, clean_session=self.args.clean_session)
 
     def produce(self):
         try:
@@ -173,6 +173,7 @@ class Producer:
                     continue
 
                 for event in self.interpreter.update(raw, now):
+                    seq = self.seq
                     self.seq += 1
                     event_time = epoch_to_utc_iso(event["t"])
                     state = "detected" if event.get("kind") == "motion_detected" else str(event.get("kind", "unknown"))
@@ -186,7 +187,7 @@ class Producer:
                         environment_id=self.args.environment_id,
                         event_type="motion",
                         motion_state=state,
-                        seq=self.seq,
+                        seq=seq,
                         run_id=self.run_id,
                         context_iri=self.args.context
                     )
@@ -197,7 +198,7 @@ class Producer:
                         self.metrics["produced"] += 1
                         if self.args.verbose:
                             print(
-                                f"[producer] published seq={self.seq} topic={self.args.topic} "
+                                f"[producer] published seq={seq} topic={self.args.topic} "
                                 f"state={record['motion_state']} event_time={event_time}",
                                 flush=True,
                             )
@@ -205,7 +206,7 @@ class Producer:
                         self.metrics["dropped"] += 1
                         if self.args.verbose:
                             print(
-                                f"[producer] publish failed seq={self.seq} rc={result.rc}",
+                                f"[producer] publish failed seq={seq} rc={result.rc}",
                                 file=sys.stderr,
                                 flush=True,
                             )
@@ -244,7 +245,7 @@ def main() -> int:
             print(
                 f"[producer] broker={args.broker}:{args.port} topic={args.topic} qos={args.qos} "
                 f"device={args.device_id} pin={args.pin if args.pin is not None else 'simulated'} interval={args.sample_interval}s "
-                f"cooldown={args.cooldown}s min_high={args.min_high}s duration={args.duration}s",
+                f"cooldown={args.cooldown}s min_high={args.min_high}s duration={args.duration}s seq_start={args.seq_start}",
                 flush=True,
             )
 

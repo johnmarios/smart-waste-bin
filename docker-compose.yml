@@ -57,11 +57,37 @@ services:
     command: >
       python consumer.py
       --broker broker
+      --client-id consumer-main
       --topic environments/+/wastebins/wastebin-01/sensors/pir-01/#
       --out /data/events.jsonl
       --duration 3000
       --verbose
     
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.50'
+    restart: unless-stopped
+
+  consumer-slow: # this is a second consumer service that simulates a slower consumer by adding a delay between processing messages, so we can see how the broker handles backpressure and message buffering when one consumer is slower than the other
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iot-consumer-slow
+    depends_on:
+      - broker
+    volumes:
+      - pipeline-data:/data
+    command: >
+      python consumer.py
+      --broker broker
+      --client-id consumer-slow
+      --topic environments/environment-01/wastebins/+/sensors/pir-01/#
+      --out /data/events-slow.jsonl
+      --consumer-delay 4
+      --duration 3000
+      --verbose
     deploy:
       resources:
         limits:
@@ -89,6 +115,7 @@ services:
     command: >
       python producer.py
       --broker broker
+      --client-id producer-main
       --topic environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events
       --pin 17
       --duration 3000
@@ -117,6 +144,7 @@ services:
     command: >
       python producer.py
       --broker broker
+      --client-id producer-sim
       --topic environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events
       --simulate
       --duration 3000

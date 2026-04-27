@@ -25,6 +25,7 @@ def str_to_bool(value: str) -> bool:
 def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description="Storage/Logger consumer")
 	parser.add_argument("--broker", default="localhost") # MQTT broker address (default: localhost)
+	parser.add_argument("--client-id", required=True)
 	parser.add_argument("--port", type=int, default=1883)
 	parser.add_argument("--topic", default="environments/+/wastebins/wastebin-01/sensors/pir-01/#")
 	parser.add_argument("--qos", type=int, default=1, choices=[0, 1, 2])
@@ -50,12 +51,11 @@ def validate_args(args: argparse.Namespace) -> None:
 
 class Consumer:
 	'''MQTT consumer that subscribes to a topic and appends received messages to a JSONL file.'''
-	static_counter = 0 # static counter to generate unique MQTT client IDs for multiple consumer instances
 
 	@staticmethod
 	# handles compatibility with different versions of paho-mqtt library by checking for the presence of the CallbackAPIVersion
 	#  attribute and using it to create the MQTT client accordingly
-	def _create_mqtt_client(client_id: str, clean_session: bool) -> mqtt.Client:
+	def create_mqtt_client(client_id: str, clean_session: bool) -> mqtt.Client:
 		if hasattr(mqtt, "CallbackAPIVersion"):
 			return mqtt.Client(
 				callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -73,9 +73,7 @@ class Consumer:
 		self.seen_message_keys = set() # keys : run_id:seq or canonical JSON string of the record
 		self.seen_message_order = deque() # to track the order of seen message keys for eviction from the cache when it exceeds the specified size
 
-		client_id = f"C{Consumer.static_counter}"
-		Consumer.static_counter += 1
-		self.client = self._create_mqtt_client(client_id=client_id, clean_session=self.args.clean_session)
+		self.client = self.create_mqtt_client(client_id=self.args.client_id, clean_session=self.args.clean_session)
 		self.client.on_connect = self.on_connect
 		self.client.on_message = self.on_message
 
