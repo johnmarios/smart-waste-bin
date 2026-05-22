@@ -74,7 +74,7 @@ services:
 
 
 
-  consumer-project:
+  consumer:
   # build the consumer image using the Dockerfile in the current directory
     build:
     # specify the build context and Dockerfile location
@@ -139,7 +139,7 @@ services:
           cpus: '0.50'
     restart: unless-stopped
 
-  producer-project:
+  producer:
   # build the producer image using the Dockerfile in the current directory
     build:
       context: .
