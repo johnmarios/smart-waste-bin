@@ -30,6 +30,50 @@ services:
     restart: unless-stopped
 
 
+  api:
+    # build the API image using the Dockerfile in the current directory
+    build: .
+    # give the container a name for easier reference
+    container_name: api-project
+    # the API service depends on the broker service, so it will wait for the broker to be ready before starting
+    depends_on:
+      - broker
+    # expose the API port to the host machine so that we can access the API endpoints from outside the container
+    ports:
+      - "8001:8000"
+
+  node-red:
+    # use the official Node-RED image from Docker Hub, which provides a visual programming environment for wiring together IoT devices and services
+    image: nodered/node-red
+    # give the container a name for easier reference
+    container_name: node-red-project
+    # the Node-RED service depends on the broker service, so it will wait for the broker to be ready before starting
+    depends_on:
+      - broker
+    # expose the Node-RED editor port to the host machine so that we can access the visual programming interface from a web browser
+    ports:
+      - "1881:1880"
+    # bind the folder /data of the container to a local directory ./data/nodered on the host machine, so that the Node-RED flows and configuration will be stored persistently and can be accessed from the host machine. This way, if the container is restarted, the Node-RED data will not be lost.
+    volumes:
+      - ./data/nodered:/data
+
+  homeassistant:
+    # use the official Home Assistant image from Docker Hub, which provides a popular open-source home automation platform that can integrate with various IoT devices and services
+    image: homeassistant/home-assistant
+    # give the container a name for easier reference
+    container_name: home-assistant-project
+    # the Home Assistant service depends on the broker service, so it will wait for the broker to be ready before starting
+    depends_on:
+      - broker  
+    # expose the Home Assistant web interface port to the host machine so that we can access the home automation dashboard from a web browser
+    ports:
+      - "8124:8123"
+    # bind the folder /config of the container to a local directory ./data/homeassistant on the host machine, so that the Home Assistant configuration and data will be stored persistently and can be accessed from the host machine. This way, if the container is restarted, the Home Assistant data will not be lost.   
+    volumes:
+      - ./data/homeassistant:/config
+
+
+
   consumer:
   # build the consumer image using the Dockerfile in the current directory
     build:
@@ -46,11 +90,11 @@ services:
     depends_on:
       - broker
 
-    # it binds the folder /data of the container to a named volume called pipeline-data, 
+    # it binds the folder /data of the container to a local directory ./data/consumer on the host machine, 
     # so that the events.jsonl file created by the consumer will be stored persistently 
     #and can be accessed from the host machine so if the container is restarted, the data will not be lost
     volumes:
-      - pipeline-data:/data
+      - ./data/consumer:/data
 
     # the command to run the consumer, which connects to the broker, subscribes to a topic pattern, 
     # and writes events to a file for 50 minutes with verbose output
@@ -78,7 +122,7 @@ services:
     depends_on:
       - broker
     volumes:
-      - pipeline-data:/data
+      - ./data/consumer-slow:/data
     command: >
       python consumer.py
       --broker broker
@@ -164,5 +208,5 @@ services:
           cpus: '0.50'
     restart: unless-stopped
 
-volumes:
-  pipeline-data:
+#volumes:
+#  pipeline-data:
