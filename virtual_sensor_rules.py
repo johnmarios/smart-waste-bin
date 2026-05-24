@@ -62,10 +62,10 @@ def evaluate_usage(window_minutes=10):
     if count == 0:
         return "idle", count
 
-    elif count <= 2:
+    elif count <= 5:
         return "low", count
 
-    elif count <= 5:
+    elif count <= 10:
         return "medium", count
 
     else:
