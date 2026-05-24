@@ -208,5 +208,22 @@ services:
           cpus: '0.50'
     restart: unless-stopped
 
+  virtual-sensor-ml:
+    build: .
+    container_name: virtual-sensor-ml
+    depends_on:
+      - broker
+
+    command:
+      [
+        "python",
+        "virtual_sensor_ml.py",
+        "--broker", "broker",
+        "--port", "1883"
+      ]
+
+
+
+
 #volumes:
 #  pipeline-data:
