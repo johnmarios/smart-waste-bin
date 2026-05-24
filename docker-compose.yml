@@ -164,9 +164,9 @@ services:
       --topic environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events
       --pin 17
       --duration 3000
-      --device-id urn:dev:team-06:pir-motion-sensor-01
-      --wastebin-id urn:dev:team-06:wastebin-01
-      --environment-id urn:dev:team-06:environment-01
+      --device-id pir-motion-sensor-01
+      --wastebin-id wastebin-01
+      --environment-id environment-01
       --verbose
     deploy:
       resources:
@@ -197,9 +197,9 @@ services:
       --cooldown 0.2
       --sample-interval 0.05
       --duration 3000
-      --device-id urn:dev:team-06:pir-motion-sensor-01
-      --wastebin-id urn:dev:team-06:wastebin-01
-      --environment-id urn:dev:team-06:environment-01
+      --device-id pir-motion-sensor-01
+      --wastebin-id wastebin-01
+      --environment-id environment-01
       --verbose
     deploy:
       resources:
