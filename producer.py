@@ -172,7 +172,7 @@ class Producer:
             "device": {
                 "identifiers": [f"{environment_id}_{wastebin_id}_{device_id}"],
                 "name": f"Device {device_id}",
-                "model": "Docker Motion Sensor",
+                "model": "Motion Sensor",
                 "manufacturer": "Team 06"
             }
         }
@@ -333,7 +333,6 @@ class Producer:
 
                 time.sleep(self.args.sample_interval)
         finally:
-            self.client.loop_stop()
             self.client.publish(
                 f"smartbin/{self.args.wastebin_id}/availability",
                 "offline",
@@ -347,6 +346,7 @@ class Producer:
                 qos=1,
                 retain=True
             )
+            self.client.loop_stop()
             self.client.disconnect()
 
 
