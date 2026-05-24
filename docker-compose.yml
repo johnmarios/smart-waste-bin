@@ -222,7 +222,19 @@ services:
         "--port", "1883"
       ]
 
+virtual-sensor-rules:
+  build: .
+  container_name: virtual-sensor-rules
+  depends_on:
+    - broker
 
+  command:
+    [
+      "python",
+      "virtual_sensor_rules.py",
+      "--broker", "broker",
+      "--port", "1883"
+    ]
 
 
 #volumes:
