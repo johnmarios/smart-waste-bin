@@ -38,6 +38,8 @@ class PirInterpreter:
             self.high_start_t = None
             self.emitted_for_this_high = False
 
+            events.append({"kind": "motion_ended", "t": t})
+            
         # If currently HIGH and we haven't emitted yet, check min_high and cooldown
         if raw and (not self.emitted_for_this_high) and (self.high_start_t is not None):
             high_for = t - self.high_start_t # How long has it been HIGH?

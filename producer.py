@@ -30,16 +30,16 @@ def epoch_to_utc_iso(epoch_seconds: float) -> str:
     '''Convert epoch seconds to ISO 8601 UTC string with milliseconds precision.'''
     return datetime.fromtimestamp(epoch_seconds, tz=timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
+## kollane ta paths me to : :
+# def normalize_entity_id(value: str, default_prefix: str = "urn:dev:team-06:") -> str:
 
-def normalize_entity_id(value: str, default_prefix: str = "urn:dev:team-06:") -> str:
+#     '''Normalize an entity ID by ensuring it starts with a URN prefix. 
+#     If the value already starts with "urn:", it is returned unchanged. 
+#     Otherwise, the default prefix is prepended to the value.'''
 
-    '''Normalize an entity ID by ensuring it starts with a URN prefix. 
-    If the value already starts with "urn:", it is returned unchanged. 
-    Otherwise, the default prefix is prepended to the value.'''
-
-    if value.startswith("urn:"):
-        return value
-    return f"{default_prefix}{value}"
+#     if value.startswith("urn:"):
+#         return value
+#     return f"{default_prefix}{value}"
 
 
 def create_event(
@@ -57,9 +57,9 @@ def create_event(
         "@context": context_iri,
         "@type": "sosa:Observation",
         "event_time": event_time,
-        "device_id": normalize_entity_id(device_id),
-        "wastebin_id": normalize_entity_id(wastebin_id),
-        "environment_id": normalize_entity_id(environment_id),
+        "device_id": device_id,
+        "wastebin_id": wastebin_id,
+        "environment_id": environment_id,
         "event_type": event_type,
         "motion_state": motion_state,
         "seq": seq,
@@ -153,10 +153,91 @@ class Producer:
 
         self.client = self.create_mqtt_client(client_id=self.args.client_id, clean_session=self.args.clean_session)
 
+
+    def ha_pub_discovery(self, client, environment_id, wastebin_id, device_id):
+        
+        # Publish Home Assistant MQTT Discovery configuration for a binary sensor representing the motion state (detected/clear) of the PIR motion sensor.
+        config = {
+            "name": "Motion Sensor",
+            "state_topic": f"pir_sensor/{device_id}/motion",
+            "payload_on": "detected",
+            "payload_off": "clear",
+            "device_class": "motion",
+            "unique_id": f"{device_id}_motion_sensor",
+
+            "availability_topic": f"pir_sensor/{device_id}/status",
+            "payload_available": "online",
+            "payload_not_available": "offline",
+
+            "device": {
+                "identifiers": [f"{environment_id}_{wastebin_id}_{device_id}"],
+                "name": f"Device {device_id}",
+                "model": "Docker Motion Sensor",
+                "manufacturer": "Team 06"
+            }
+        }
+
+        payload = json.dumps(config)
+
+        topic = f"homeassistant/binary_sensor/{device_id}/motion/config"
+
+        client.publish(topic, payload, qos=1, retain=True)
+
+
+        # Additionally, we can publish a sensor configuration for the wastebin status
+        config = {
+            "name": "Wastebin Status",
+            "state_topic": f"smartbin/{wastebin_id}/status",
+            "value_template": "{{ value_json.state }}",
+            "json_attributes_topic": f"smartbin/{wastebin_id}/status",
+            "unique_id": f"wastebin_{wastebin_id}_status",
+
+            "availability_topic": f"smartbin/{wastebin_id}/availability",
+            "payload_available": "online",
+            "payload_not_available": "offline",
+
+            "device": {
+                "identifiers": [f"{environment_id}_{wastebin_id}"],
+                "name": f"Smart Wastebin {wastebin_id}",
+                "model": "Smart Wastebin v1",
+                "manufacturer": "Team 06"
+            }
+        }
+
+        payload = json.dumps(config)
+
+        topic = f"homeassistant/sensor/{wastebin_id}_status/config"
+
+        client.publish(topic, payload, qos=1, retain=True)
+
+
+    
     def produce(self):
         try:
             self.client.connect(self.args.broker, self.args.port, 60) # 60 is the keepalive interval in seconds
             self.client.loop_start()
+
+            # Publish initial availability status for Home Assistant
+            self.client.publish(f"pir_sensor/{self.args.device_id}/status", "online", qos=1, retain=True)
+            self.client.publish(f"pir_sensor/{self.args.device_id}/motion", "clear", qos=1, retain=True) # Initial state is "clear" (no motion)
+            
+            self.client.publish(f"smartbin/{self.args.wastebin_id}/availability", "online", qos=1, retain=True)
+
+
+            self.ha_pub_discovery(self.client, self.args.environment_id, self.args.wastebin_id, self.args.device_id)
+            
+            
+            # Publish initial status for the wastebin 
+            status_payload = {
+                "state": "active",
+                "location": "Kypes",
+                "last_motion": None,
+                "total_events_today": 0
+            }
+
+            # publish the initial status to the MQTT topic for the wastebin status sensor, using JSON format and retaining the message so that new subscribers get the latest status immediately
+            self.client.publish(f"smartbin/{self.args.wastebin_id}/status", json.dumps(status_payload), qos=1, retain=True)
+
 
             start_t = time.time()
 
@@ -173,11 +254,37 @@ class Producer:
                     continue
 
                 for event in self.interpreter.update(raw, now):
-                    seq = self.seq
-                    self.seq += 1
                     event_time = epoch_to_utc_iso(event["t"])
-                    state = "detected" if event.get("kind") == "motion_detected" else str(event.get("kind", "unknown"))
+                    if event.get("kind") == "motion_detected":
+                        state = "detected"
+                    else:
+                        state = "clear"
 
+                    # Publish the event count to a separate topic for Home Assistant integration
+                    if event.get("kind") == "motion_detected":
+                        self.seq += 1
+
+                        self.client.publish(
+                            f"smartbin/{self.args.wastebin_id}/motion_count",
+                            str(self.seq),
+                            retain=True
+                        )
+                    seq = self.seq
+
+                    # Update the wastebin status with the latest motion event information
+                    if event.get("kind") == "motion_detected":
+                        status_payload = {
+                            "state": "active",
+                            "location": "Kypes",
+                            "last_motion": event_time,
+                            "total_events_today": self.seq
+                        }
+
+                        self.client.publish(
+                            f"smartbin/{self.args.wastebin_id}/status",
+                            json.dumps(status_payload),
+                            retain=True
+                        )
                     # send the dictionary as a JSON message to the MQTT topic
                     
                     record = create_event(
@@ -194,6 +301,19 @@ class Producer:
 
                     payload = json.dumps(record) # Convert the event record dictionary to a JSON string for MQTT payload
                     result = self.client.publish(self.args.topic, payload, qos=self.args.qos)
+                    
+                    # # Publish simplified HA state (detected / clear)
+                    ha_topic = f"pir_sensor/{self.args.device_id}/motion"
+
+                    
+                    if event.get("kind") == "motion_detected":
+                        ha_state = "detected"
+                    else:
+                        ha_state = "clear"
+
+                    self.client.publish(ha_topic, ha_state, qos=1, retain=True)
+                    
+                    
                     if result.rc == mqtt.MQTT_ERR_SUCCESS:
                         self.metrics["produced"] += 1
                         if self.args.verbose:
@@ -214,7 +334,21 @@ class Producer:
                 time.sleep(self.args.sample_interval)
         finally:
             self.client.loop_stop()
+            self.client.publish(
+                f"smartbin/{self.args.wastebin_id}/availability",
+                "offline",
+                qos=1,
+                retain=True
+            )
+
+            self.client.publish(
+                f"pir_sensor/{self.args.device_id}/status",
+                "offline",
+                qos=1,
+                retain=True
+            )
             self.client.disconnect()
+
 
 
 def main() -> int:
