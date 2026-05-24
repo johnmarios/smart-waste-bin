@@ -16,6 +16,8 @@ COPY pirlib/ pirlib/
 COPY models/ models/
 COPY producer.py consumer.py ./
 COPY train_model.py ./
+COPY virtual_sensor_ml.py .
+COPY virtual_sensor_rules.py .
 
 # create a directory for the app where consumer can store data
 RUN mkdir -p /data
