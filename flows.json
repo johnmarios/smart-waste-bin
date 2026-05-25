@@ -84,7 +84,7 @@
         "type": "function",
         "z": "ab1b0ea518202bba",
         "name": "function 1",
-        "func": "let eventLog = flow.get(\"motion_events\");\n\n// Initialize event log if it does not exist\nif (!eventLog) {\n    eventLog = [];\n}\n\nconst currentTime = Date.now();\nconst windowSizeMinutes = 2;\nconst timeWindow = windowSizeMinutes * 60 * 1000;\n\n// Add current timestamp\neventLog.push(currentTime);\n\n// Remove events older than or equal to 10 minutes\neventLog = eventLog.filter(eventTime => {\n    return (currentTime - eventTime) < timeWindow;\n});\n\n// Save updated log\nflow.set(\"motion_events\", eventLog);\n\nconst eventCount = eventLog.length;\n\nlet activityLevel;\n\n// Determine activity level\nif (eventCount === 0) {\n    activityLevel = \"idle\";\n} else if (eventCount <= 2) {\n    activityLevel = \"low\";\n} else if (eventCount <= 5) {\n    activityLevel = \"medium\";\n} else {\n    activityLevel = \"high\";\n}\n\n// Create message payload\nmsg.payload = {\n    activity_level: activityLevel,\n    event_count: eventCount,\n    window_size_minutes: windowSizeMinutes,\n    evaluation_timestamp: new Date(currentTime).toISOString()\n};\n\nreturn msg;",
+        "func": "let eventLog = flow.get(\"motion_events\");\n\n// Initialize event log if it does not exist\nif (!eventLog) {\n    eventLog = [];\n}\n\nconst currentTime = Date.now();\nconst windowSizeMinutes = 2;\nconst timeWindow = windowSizeMinutes * 60 * 1000;\n\n// Add current timestamp\neventLog.push(currentTime);\n\n// Remove events older than or equal to 10 minutes\neventLog = eventLog.filter(eventTime => {\n    return (currentTime - eventTime) < timeWindow;\n});\n\n// Save updated log\nflow.set(\"motion_events\", eventLog);\n\nconst eventCount = eventLog.length;\n\nlet activityLevel;\n\n// Determine activity level\nif (eventCount === 0) {\n    activityLevel = \"idle\";\n} else if (eventCount <= 5) {\n    activityLevel = \"low\";\n} else if (eventCount <= 10) {\n    activityLevel = \"medium\";\n} else {\n    activityLevel = \"high\";\n}\n\n// Create message payload\nmsg.payload = {\n    activity_level: activityLevel,\n    event_count: eventCount,\n    window_size_minutes: windowSizeMinutes,\n    evaluation_timestamp: new Date(currentTime).toISOString()\n};\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -110,7 +110,7 @@
         "z": "ab1b0ea518202bba",
         "name": "",
         "topic": "smartbin/bin-01/usage/nodered",
-        "qos": "",
+        "qos": "1",
         "retain": "true",
         "respTopic": "",
         "contentType": "",
@@ -212,7 +212,7 @@
         "type": "mqtt out",
         "z": "ab1b0ea518202bba",
         "name": "",
-        "topic": "smartbin/bin-01/alerts",
+        "topic": "smartbin/wastebin-01/alerts",
         "qos": "",
         "retain": "true",
         "respTopic": "",
@@ -221,7 +221,7 @@
         "correl": "",
         "expiry": "",
         "broker": "8dfeaf083c7d1ada",
-        "x": 840,
+        "x": 860,
         "y": 300,
         "wires": []
     },
@@ -311,7 +311,7 @@
                 "textType": "label"
             },
             {
-                "from": "30",
+                "from": "40",
                 "color": "#ffc800",
                 "text": "",
                 "textType": "label"
@@ -512,7 +512,7 @@
         }
     },
     {
-        "id": "051a9cdff474180c",
+        "id": "c2aeb4890522fde9",
         "type": "global-config",
         "env": [],
         "modules": {
