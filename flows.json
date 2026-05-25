@@ -100,7 +100,8 @@
                 "322df7dccf748bef",
                 "5d82c7a112eaa9a6",
                 "e08f0d64153c3b8a",
-                "77dcf4e6ba21aa7d"
+                "77dcf4e6ba21aa7d",
+                "8fb8a188562018fd"
             ]
         ]
     },
@@ -213,7 +214,7 @@
         "z": "ab1b0ea518202bba",
         "name": "",
         "topic": "smartbin/wastebin-01/alerts",
-        "qos": "",
+        "qos": "1",
         "retain": "true",
         "respTopic": "",
         "contentType": "",
@@ -267,7 +268,7 @@
         "order": 1,
         "width": 0,
         "height": 0,
-        "name": "event_count",
+        "name": "event_count per time window",
         "label": "Activity Level",
         "format": "{{msg.payload}}",
         "layout": "row-spread",
@@ -279,8 +280,8 @@
         "className": "",
         "value": "msg.payload.activity_level",
         "valueType": "msg",
-        "x": 770,
-        "y": 480,
+        "x": 840,
+        "y": 620,
         "wires": []
     },
     {
@@ -292,11 +293,11 @@
         "order": "1",
         "value": "msg.payload.event_count",
         "valueType": "msg",
-        "width": 3,
+        "width": "6",
         "height": 3,
         "gtype": "gauge-half",
         "gstyle": "needle",
-        "title": "Bin Usage",
+        "title": "Events per time window",
         "alwaysShowTitle": false,
         "floatingTitlePosition": "top-left",
         "units": "units",
@@ -311,28 +312,28 @@
                 "textType": "label"
             },
             {
-                "from": "40",
+                "from": "5",
                 "color": "#ffc800",
                 "text": "",
                 "textType": "label"
             },
             {
-                "from": "80",
+                "from": "10",
                 "color": "#ea5353",
                 "text": "",
                 "textType": "label"
             }
         ],
         "min": 0,
-        "max": "100",
+        "max": "30",
         "sizeThickness": 16,
         "sizeGap": 4,
         "sizeKeyThickness": 8,
         "styleRounded": true,
         "styleGlow": false,
         "className": "",
-        "x": 770,
-        "y": 520,
+        "x": 830,
+        "y": 660,
         "wires": [
             []
         ]
@@ -342,7 +343,7 @@
         "type": "comment",
         "z": "ab1b0ea518202bba",
         "name": "ReadMe",
-        "info": "-->payload from producer\n\n-->switch for motion detected or clear\n\n## If detected:\n\n# function 1 determines activity level \n\n-->payload is sent to smartbin/bin-01/usage/nodered\n(can be checked from terminal)\n\n-->payload is sent to smartbin/bin-01/alerts\n(straight to home assistant)\n\n-->also to gauge and text for ui\n(can be checked in \"http://<raspberry-ip>:1881/dashboard)\n\n-->Write events in file\n\n# -->swich for high \n\n-->POST in API\n-->format message iin function 3 and publish notification in dsahboard\n\n\n",
+        "info": "-->payload from producer\n\n-->switch for motion detected or clear\n\n## If detected:\n\n# function 1 determines activity level \n\n-->payload is sent to smartbin/bin-01/usage/nodered\n(can be checked from terminal)\n\n-->payload is sent to smartbin/bin-01/alerts\n(straight to home assistant)\n\n-->also to gauge and text for ui\n(can be checked in \"http://<raspberry-ip>:1881/dashboard)\n-->function 4 formats payload for ui\n\n-->Write events in file\n\n# -->swich for high \n\n-->POST in API\n-->format message iin function 3 and publish notification in dsahboard\n\n\n",
         "x": 160,
         "y": 260,
         "wires": []
@@ -365,7 +366,7 @@
         "raw": true,
         "className": "",
         "name": "High activity notification",
-        "x": 1150,
+        "x": 1130,
         "y": 480,
         "wires": [
             []
@@ -388,6 +389,57 @@
         "wires": [
             [
                 "82c37bdb54271630"
+            ]
+        ]
+    },
+    {
+        "id": "36666a49f53a305d",
+        "type": "ui-text-input",
+        "z": "ab1b0ea518202bba",
+        "group": "9d4f7430afc06749",
+        "name": "",
+        "label": "Logs",
+        "order": 0,
+        "width": "6",
+        "height": "5",
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "textarea",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": true,
+        "sendOnDelay": false,
+        "sendOnBlur": true,
+        "sendOnEnter": true,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 950,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8fb8a188562018fd",
+        "type": "function",
+        "z": "ab1b0ea518202bba",
+        "name": "function 4",
+        "func": "const ts = new Date(msg.payload.evaluation_timestamp);\n\n\nmsg.payload =\n    \"--------------------------------------------------\" +\n    \"\\nActivity Level: \" + msg.payload.activity_level +\n    \"\\nEvent Count: \" + msg.payload.event_count +\n    \"\\nWindow Size: \" + msg.payload.window_size_minutes + \" min\" +\n    \"\\nTime: \" + ts.toLocaleString(\"el-GR\", {\n        timeZone: \"Europe/Athens\"\n    }) +\n    \"\\n\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 700,
+        "wires": [
+            [
+                "36666a49f53a305d"
             ]
         ]
     },
@@ -512,7 +564,7 @@
         }
     },
     {
-        "id": "c2aeb4890522fde9",
+        "id": "353e43dc8045ccee",
         "type": "global-config",
         "env": [],
         "modules": {

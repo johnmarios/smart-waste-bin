@@ -228,8 +228,25 @@ class Producer:
             retain=True
         )
 
+        client.publish(
+            f"homeassistant/sensor/{wastebin_id}_event_count_window/config",
+            json.dumps({
+                "name": "Event Count",
+                "state_topic": f"smartbin/{wastebin_id}/alerts",
+                "value_template": "{{ value_json.event_count }}",
+                "unique_id": f"{wastebin_id}_event_count_window",
+                "unit_of_measurement": "events",
 
-    
+                "device": {
+                    "identifiers": [f"{environment_id}_{wastebin_id}"],
+                    "name": f"Smart Wastebin {wastebin_id}",
+                    "model": "Smart Wastebin v1",
+                    "manufacturer": "Team 06"
+                }
+            }),
+            retain=True
+        )
+        
     def produce(self):
         try:
             self.client.connect(self.args.broker, self.args.port, 60) # 60 is the keepalive interval in seconds
