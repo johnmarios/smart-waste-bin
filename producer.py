@@ -165,7 +165,7 @@ class Producer:
             "device_class": "motion",
             "unique_id": f"{device_id}_motion_sensor",
 
-            "availability_topic": f"pir_sensor/{device_id}/status",
+            "availability_topic": f"pir_sensor/{device_id}/availability",
             "payload_available": "online",
             "payload_not_available": "offline",
 
@@ -192,10 +192,6 @@ class Producer:
             "json_attributes_topic": f"smartbin/{wastebin_id}/status",
             "unique_id": f"wastebin_{wastebin_id}_status",
 
-            "availability_topic": f"smartbin/{wastebin_id}/availability",
-            "payload_available": "online",
-            "payload_not_available": "offline",
-
             "device": {
                 "identifiers": [f"{environment_id}_{wastebin_id}"],
                 "name": f"Smart Wastebin {wastebin_id}",
@@ -210,6 +206,28 @@ class Producer:
 
         client.publish(topic, payload, qos=1, retain=True)
 
+        # we can publish a sensor configuration for the activity level (active/inactive) based on the wastebin status 
+        # output from node red
+        client.publish(
+            f"homeassistant/sensor/{wastebin_id}_activity_level/config",
+            json.dumps({
+                "name": "Activity Level",
+                "state_topic": f"smartbin/{wastebin_id}/alerts",
+                "value_template": "{{ value_json.activity_level }}",
+                "json_attributes_topic": f"smartbin/{wastebin_id}/alerts",
+                "unique_id": f"wastebin_{wastebin_id}_activity_level",
+                "icon": "mdi:motion-sensor",
+
+                "device": {
+                    "identifiers": [f"{wastebin_id}"],
+                    "name": f"Smart Wastebin {wastebin_id}",
+                    "model": "Smart Wastebin v1",
+                    "manufacturer": "Team 06"
+                }
+            }),
+            retain=True
+        )
+
 
     
     def produce(self):
@@ -217,16 +235,14 @@ class Producer:
             self.client.connect(self.args.broker, self.args.port, 60) # 60 is the keepalive interval in seconds
             self.client.loop_start()
 
-            # Publish initial availability status for Home Assistant
-            self.client.publish(f"pir_sensor/{self.args.device_id}/status", "online", qos=1, retain=True)
-            self.client.publish(f"pir_sensor/{self.args.device_id}/motion", "clear", qos=1, retain=True) # Initial state is "clear" (no motion)
-            
-            self.client.publish(f"smartbin/{self.args.wastebin_id}/availability", "online", qos=1, retain=True)
-
-
+            # Publish Home Assistant MQTT Discovery configuration for the PIR motion sensor and wastebin status sensor
             self.ha_pub_discovery(self.client, self.args.environment_id, self.args.wastebin_id, self.args.device_id)
-            
-            
+
+            # Publish initial availability status for Home Assistant
+            self.client.publish(f"pir_sensor/{self.args.device_id}/availability", "online", qos=1, retain=True)
+            self.client.publish(f"pir_sensor/{self.args.device_id}/motion", "clear", qos=1, retain=True) # Initial state is "clear" (no motion)
+
+
             # Publish initial status for the wastebin 
             status_payload = {
                 "state": "active",
@@ -333,15 +349,23 @@ class Producer:
 
                 time.sleep(self.args.sample_interval)
         finally:
+            # Before disconnecting, publish an offline status for Home Assistant and the wastebin status sensor
+            status_payload = {
+                "state": "inactive",
+                "location": "Kypes",
+                "last_motion": None,
+                "total_events_today": self.seq
+            }
+
             self.client.publish(
-                f"smartbin/{self.args.wastebin_id}/availability",
-                "offline",
+                f"smartbin/{self.args.wastebin_id}/status",
+                json.dumps(status_payload),
                 qos=1,
                 retain=True
             )
 
             self.client.publish(
-                f"pir_sensor/{self.args.device_id}/status",
+                f"pir_sensor/{self.args.device_id}/availability",
                 "offline",
                 qos=1,
                 retain=True
