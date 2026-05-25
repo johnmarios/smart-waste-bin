@@ -231,7 +231,7 @@ class Producer:
         client.publish(
             f"homeassistant/sensor/{wastebin_id}_event_count_window/config",
             json.dumps({
-                "name": "Event Count",
+                "name": "Event Count per Window",
                 "state_topic": f"smartbin/{wastebin_id}/alerts",
                 "value_template": "{{ value_json.event_count }}",
                 "unique_id": f"{wastebin_id}_event_count_window",
