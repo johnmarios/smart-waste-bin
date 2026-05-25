@@ -221,6 +221,7 @@ services:
         "--broker", "broker",
         "--port", "1883"
       ]
+    restart: unless-stopped
 
   virtual-sensor-rules:
     build: .
@@ -234,8 +235,8 @@ services:
         "virtual_sensor_rules.py",
         "--broker", "broker",
         "--port", "1883"
-      ]
-
+      ] 
+    restart: unless-stopped
 
 #volumes:
 #  pipeline-data:
