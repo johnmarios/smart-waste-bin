@@ -1,0 +1,13 @@
+# Virtual environments
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local logs
+*.log
+*.jsonl
+
+# Runtime data
+data/
