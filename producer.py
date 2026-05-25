@@ -353,7 +353,7 @@ class Producer:
             status_payload = {
                 "state": "inactive",
                 "location": "Kypes",
-                "last_motion": None,
+                "last_motion": event_time,
                 "total_events_today": self.seq
             }
 
