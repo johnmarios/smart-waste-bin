@@ -219,7 +219,7 @@ class Producer:
                 "icon": "mdi:motion-sensor",
 
                 "device": {
-                    "identifiers": [f"{wastebin_id}"],
+                    "identifiers": [f"{environment_id}_{wastebin_id}"],
                     "name": f"Smart Wastebin {wastebin_id}",
                     "model": "Smart Wastebin v1",
                     "manufacturer": "Team 06"
