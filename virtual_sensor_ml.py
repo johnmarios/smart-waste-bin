@@ -80,8 +80,8 @@ def publish_ha_discovery(client, environment_id, wastebin_id, device_id):
         "payload_not_available": "offline",
 
         "device": {
-            "identifiers": [f"{environment_id}_{wastebin_id}", f"{device_id}"],
-            "name": f"Smart Wastebin {wastebin_id}",
+            "identifiers": [f"{environment_id}_{wastebin_id}"],
+            "name": f"Smart {wastebin_id}",
             "model": "ML Virtual Sensor",
             "manufacturer": "Team 06"
         }
