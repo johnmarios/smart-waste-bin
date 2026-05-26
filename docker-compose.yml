@@ -193,7 +193,7 @@ services:
       --seq-start 0
       --topic environments/environment-01/wastebins/wastebin-02/sensors/pir-02/events
       --simulate
-      --simulate-prob 0.1
+      --simulate-prob 0.3
       --cooldown 5
       --sample-interval 0.2
       --duration 3000
@@ -210,7 +210,7 @@ services:
 
   virtual-sensor-ml-1:
     build: .
-    container_name: virtual-sensor-ml
+    container_name: virtual-sensor-ml-1
     depends_on:
       - broker
 
@@ -219,7 +219,28 @@ services:
         "python",
         "virtual_sensor_ml.py",
         "--broker", "broker",
-        "--port", "1883"
+        "--port", "1883",
+        "--environment-id", "environment-01",
+        "--wastebin-id", "wastebin-01",
+        "--device-id", "pir-01"
+      ]
+    restart: unless-stopped
+
+  virtual-sensor-ml-2:
+    build: .
+    container_name: virtual-sensor-ml-2
+    depends_on:
+      - broker
+
+    command:
+      [
+        "python",
+        "virtual_sensor_ml.py",
+        "--broker", "broker",
+        "--port", "1883",
+        "--environment-id", "environment-01",
+        "--wastebin-id", "wastebin-01",
+        "--device-id", "pir-01"
       ]
     restart: unless-stopped
 

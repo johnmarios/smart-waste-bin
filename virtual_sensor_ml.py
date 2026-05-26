@@ -58,37 +58,37 @@ def predict_next_hour(model):
     )
 
 
-def publish_ha_discovery(client):
+def publish_ha_discovery(client, environment_id, wastebin_id, device_id):
 
     config_payload = {
         "name": "Wastebin Busy Prediction",
 
-        "state_topic": "smartbin/bin-01/prediction",
+        "state_topic": f"smartbin/{wastebin_id}/prediction",
 
         "value_template": "{{ value_json.prediction }}",
 
-        "json_attributes_topic": "smartbin/bin-01/prediction",
+        "json_attributes_topic": f"smartbin/{wastebin_id}/prediction",
 
-        "unique_id": "wastebin_01_busy_prediction",
+        "unique_id": f"{wastebin_id}_busy_prediction",
 
         "icon": "mdi:brain",
 
-        "availability_topic": "smartbin/bin-01/prediction/status",
+        "availability_topic": f"smartbin/{wastebin_id}/prediction/status",
 
         "payload_available": "online",
 
         "payload_not_available": "offline",
 
         "device": {
-            "identifiers": ["bin-01"],
-            "name": "Smart Wastebin 01",
+            "identifiers": [f"{environment_id}_{wastebin_id}", f"{device_id}"],
+            "name": f"Smart Wastebin {wastebin_id}",
             "model": "ML Virtual Sensor",
             "manufacturer": "Team 06"
         }
     }
 
     client.publish(
-        "homeassistant/sensor/wastebin_01_prediction/config",
+        f"homeassistant/sensor/{wastebin_id}_prediction/config",
         json.dumps(config_payload),
         qos=1,
         retain=True
@@ -116,7 +116,7 @@ def main():
 
     parser.add_argument(
         "--publish-topic",
-        default="smartbin/bin-01/prediction",
+        default="smartbin/wastebin-01/prediction",
         help="MQTT prediction topic"
     )
 
@@ -141,6 +141,19 @@ def main():
 
     args = parser.parse_args()
 
+
+    parser.add_argument("--device-id", default="pir-01")
+    parser.add_argument("--wastebin-id", default="wastebin-01")
+    parser.add_argument("--environment-id", default="environment-01")
+
+    args = parser.parse_args()
+
+    args.subscribe_topic = (
+        f"environments/{args.environment_id}"
+        f"/wastebins/{args.wastebin_id}"
+        f"/sensors/{args.device_id}/#"
+    )
+
     # Load ML model
     model = load_model(args.model_path)
 
@@ -161,11 +174,11 @@ def main():
     client.loop_start()
 
     # Publish HA discovery config
-    publish_ha_discovery(client)
+    publish_ha_discovery(client, args.environment_id, args.wastebin_id, args.device_id)
 
     # Publish availability status
     client.publish(
-        "smartbin/bin-01/prediction/status",
+        f"smartbin/{args.wastebin_id}/prediction/status",
         "online",
         qos=1,
         retain=True
@@ -236,7 +249,7 @@ def main():
 
         # Publish offline status
         client.publish(
-            "smartbin/bin-01/prediction/status",
+            f"smartbin/{args.wastebin_id}/prediction/status",
             "offline",
             qos=1,
             retain=True
