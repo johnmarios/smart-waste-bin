@@ -194,7 +194,7 @@ services:
       --topic environments/environment-01/wastebins/wastebin-02/sensors/pir-02/events
       --simulate
       --simulate-prob 0.8
-      --cooldown 0.2
+      --cooldown 5
       --sample-interval 0.05
       --duration 3000
       --device-id pir-motion-sensor-02
