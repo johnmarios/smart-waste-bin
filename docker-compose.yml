@@ -191,14 +191,14 @@ services:
       --broker broker
       --client-id producer-sim
       --seq-start 0
-      --topic environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events
+      --topic environments/environment-01/wastebins/wastebin-02/sensors/pir-02/events
       --simulate
       --simulate-prob 0.8
       --cooldown 0.2
       --sample-interval 0.05
       --duration 3000
-      --device-id pir-motion-sensor-01
-      --wastebin-id wastebin-01
+      --device-id pir-motion-sensor-02
+      --wastebin-id wastebin-02
       --environment-id environment-01
       --verbose
     deploy:
