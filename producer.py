@@ -194,7 +194,7 @@ class Producer:
 
             "device": {
                 "identifiers": [f"{environment_id}_{wastebin_id}"],
-                "name": f"Smart Wastebin {wastebin_id}",
+                "name": f"Smart {wastebin_id}",
                 "model": "Smart Wastebin v1",
                 "manufacturer": "Team 06"
             }
@@ -220,7 +220,7 @@ class Producer:
 
                 "device": {
                     "identifiers": [f"{environment_id}_{wastebin_id}"],
-                    "name": f"Smart Wastebin {wastebin_id}",
+                    "name": f"Smart {wastebin_id}",
                     "model": "Smart Wastebin v1",
                     "manufacturer": "Team 06"
                 }
@@ -239,7 +239,7 @@ class Producer:
 
                 "device": {
                     "identifiers": [f"{environment_id}_{wastebin_id}"],
-                    "name": f"Smart Wastebin {wastebin_id}",
+                    "name": f"Smart {wastebin_id}",
                     "model": "Smart Wastebin v1",
                     "manufacturer": "Team 06"
                 }
