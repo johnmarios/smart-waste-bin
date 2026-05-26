@@ -139,6 +139,10 @@ def main():
         f"/sensors/{args.device_id}/#"
     )
 
+    args.publish_topic = (
+        f"smartbin/{args.wastebin_id}/prediction"
+    )
+    
     # Load ML model
     model = load_model(args.model_path)
 
