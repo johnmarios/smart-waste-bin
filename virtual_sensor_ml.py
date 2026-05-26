@@ -133,12 +133,6 @@ def main():
         help="Prediction interval in seconds"
     )
 
-    parser.add_argument(
-        "--bin-id",
-        default="bin-01",
-        help="Smart bin identifier"
-    )
-
     parser.add_argument("--device-id", default="pir-01")
     parser.add_argument("--wastebin-id", default="wastebin-01")
     parser.add_argument("--environment-id", default="environment-01")
