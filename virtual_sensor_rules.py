@@ -85,7 +85,7 @@ def publish_ha_discovery(client, environment_id, wastebin_id, device_id):
         "payload_not_available": "offline",
 
         "device": {
-            "identifiers": [f"{environment_id}", f"{wastebin_id}", f"{device_id}"],
+            "identifiers": [f"{environment_id}_{wastebin_id}"],
             "name": f"Smart {wastebin_id}",
             "model": "Virtual Sensor",
             "manufacturer": "Team 06"
@@ -118,17 +118,17 @@ def main():
         help="MQTT broker port"
     )
 
-    parser.add_argument(
-        "--subscribe-topic",
-        default="environments/+/wastebins/wastebin-01/sensors/pir-01/#",
-        help="MQTT topic to subscribe to"
-    )
+    # parser.add_argument(
+    #     "--subscribe-topic",
+    #     default="environments/+/wastebins/wastebin-01/sensors/pir-01/#",
+    #     help="MQTT topic to subscribe to"
+    # )
 
-    parser.add_argument(
-        "--publish-topic",
-        default=f"virtual_smartbin/wastebin-01/usage",
-        help="MQTT topic to publish usage results"
-    )
+    # parser.add_argument(
+    #     "--publish-topic",
+    #     default=f"virtual_smartbin/wastebin-01/usage",
+    #     help="MQTT topic to publish usage results"
+    # )
 
     parser.add_argument(
         "--window",
@@ -208,7 +208,7 @@ def main():
             }
 
             client.publish(
-                f"virtual_smartbin/{args.wastebin_id}/usage",
+                args.publish_topic,
                 json.dumps(payload),
                 qos=1,
                 retain=True
