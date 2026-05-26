@@ -139,9 +139,6 @@ def main():
         help="Smart bin identifier"
     )
 
-    args = parser.parse_args()
-
-
     parser.add_argument("--device-id", default="pir-01")
     parser.add_argument("--wastebin-id", default="wastebin-01")
     parser.add_argument("--environment-id", default="environment-01")
