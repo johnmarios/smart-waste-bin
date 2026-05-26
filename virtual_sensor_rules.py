@@ -160,8 +160,9 @@ def main():
         f"virtual_smartbin/{args.wastebin_id}/usage"
     )
     # Create MQTT client
-    client = mqtt.Client(client_id="virtual-sensor-rules")
-
+    client = mqtt.Client(
+        client_id=f"virtual-sensor-rules-{args.wastebin_id}"
+    )
     # Register callback
     client.on_message = on_message
 
