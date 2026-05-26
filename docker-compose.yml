@@ -208,7 +208,7 @@ services:
           cpus: '0.50'
     restart: unless-stopped
 
-  virtual-sensor-ml:
+  virtual-sensor-ml-1:
     build: .
     container_name: virtual-sensor-ml
     depends_on:
@@ -225,7 +225,7 @@ services:
 
   virtual-sensor-rules-wastebin-01:
     build: .
-    container_name: virtual-sensor-rules
+    container_name: virtual-sensor-rules-1
     depends_on:
       - broker
 
@@ -243,7 +243,7 @@ services:
 
   virtual-sensor-rules-wastebin-02:
     build: .
-    container_name: virtual-sensor-rules
+    container_name: virtual-sensor-rules-2
     depends_on:
       - broker
 
