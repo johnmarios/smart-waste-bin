@@ -184,8 +184,8 @@ services:
       - broker
     # this service is for simulating the producer without needing access to GPIO devices, 
     # so it doesn't require privileged access or device mappings
-    profiles: 
-      - sim
+    ##profiles: 
+    ##  - sim
     command: >
       python producer.py
       --broker broker
