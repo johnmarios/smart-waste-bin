@@ -71,29 +71,29 @@ def evaluate_usage(window_minutes=10):
     else:
         return "high", count
 
-def publish_ha_discovery(client):
+def publish_ha_discovery(client, environment_id, wastebin_id, device_id):
     config_payload = {
         "name": "Wastebin Usage Level",
-        "state_topic": "virtual_smartbin/bin-01/usage",
+        "state_topic": f"virtual_smartbin/{wastebin_id}/usage",
         "value_template": "{{ value_json.usageLevel }}",
-        "json_attributes_topic": "virtual_smartbin/bin-01/usage",
-        "unique_id": "wastebin_01_usage_level",
+        "json_attributes_topic": f"virtual_smartbin/{wastebin_id}/usage",
+        "unique_id": f"wastebin_{wastebin_id}_usage_level",
         "icon": "mdi:chart-bar",
 
-        "availability_topic": "virtual_smartbin/bin-01/usage/status",
+        "availability_topic": f"virtual_smartbin/{wastebin_id}/usage/status",
         "payload_available": "online",
         "payload_not_available": "offline",
 
         "device": {
-            "identifiers": ["bin-01"],
-            "name": "Smart Wastebin 01",
+            "identifiers": [f"{environment_id}", f"{wastebin_id}", f"{device_id}"],
+            "name": f"Smart {wastebin_id}",
             "model": "Virtual Sensor",
             "manufacturer": "Team 06"
         }
     }
 
     client.publish(
-        "homeassistant/sensor/virtual_smartbin_bin-01_usage/config",
+        f"homeassistant/sensor/virtual_smartbin_{wastebin_id}_usage/config",
         json.dumps(config_payload),
         qos=1,
         retain=True
@@ -126,7 +126,7 @@ def main():
 
     parser.add_argument(
         "--publish-topic",
-        default="virtual_smartbin/bin-01/usage",
+        default=f"virtual_smartbin/wastebin-01/usage",
         help="MQTT topic to publish usage results"
     )
 
@@ -144,8 +144,21 @@ def main():
         help="Time between evaluations in seconds"
     )
 
+    parser.add_argument("--device-id", default="pir-01")
+    parser.add_argument("--wastebin-id", default="wastebin-01")
+    parser.add_argument("--environment-id", default="environment-01")
+
     args = parser.parse_args()
 
+    args.subscribe_topic = (
+        f"environments/{args.environment_id}"
+        f"/wastebins/{args.wastebin_id}"
+        f"/sensors/{args.device_id}/#"
+    )
+
+    args.publish_topic = (
+        f"virtual_smartbin/{args.wastebin_id}/usage"
+    )
     # Create MQTT client
     client = mqtt.Client(client_id="virtual-sensor-rules")
 
@@ -162,12 +175,12 @@ def main():
     client.loop_start()
 
     # Publish Home Assistant discovery config
-    publish_ha_discovery(client)
+    publish_ha_discovery(client, args.environment_id, args.wastebin_id, args.device_id)
 
 
     # Publish initial availability status
     client.publish(
-        "virtual_smartbin/bin-01/usage/status",
+        f"virtual_smartbin/{args.wastebin_id}/usage/status",
         "online",
         qos=1,
         retain=True
@@ -195,7 +208,7 @@ def main():
             }
 
             client.publish(
-                args.publish_topic,
+                f"virtual_smartbin/{args.wastebin_id}/usage",
                 json.dumps(payload),
                 qos=1,
                 retain=True
@@ -214,7 +227,7 @@ def main():
     finally:
         # Publish offline status
         client.publish(
-            "virtual_smartbin/bin-01/usage/status",
+            f"virtual_smartbin/{args.wastebin_id}/usage/status",
             "offline",
             qos=1,
             retain=True

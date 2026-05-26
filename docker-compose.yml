@@ -193,9 +193,9 @@ services:
       --seq-start 0
       --topic environments/environment-01/wastebins/wastebin-02/sensors/pir-02/events
       --simulate
-      --simulate-prob 0.8
+      --simulate-prob 0.1
       --cooldown 5
-      --sample-interval 0.05
+      --sample-interval 0.2
       --duration 3000
       --device-id pir-motion-sensor-02
       --wastebin-id wastebin-02
@@ -223,7 +223,7 @@ services:
       ]
     restart: unless-stopped
 
-  virtual-sensor-rules:
+  virtual-sensor-rules-wastebin-01:
     build: .
     container_name: virtual-sensor-rules
     depends_on:
@@ -234,7 +234,28 @@ services:
         "python",
         "virtual_sensor_rules.py",
         "--broker", "broker",
-        "--port", "1883"
+        "--port", "1883",
+        "--environment-id", "environment-01",
+        "--wastebin-id", "wastebin-01",
+        "--device-id", "pir-01"
+      ] 
+    restart: unless-stopped
+
+  virtual-sensor-rules-wastebin-02:
+    build: .
+    container_name: virtual-sensor-rules
+    depends_on:
+      - broker
+
+    command:
+      [
+        "python",
+        "virtual_sensor_rules.py",
+        "--broker", "broker",
+        "--port", "1883",
+        "--environment-id", "environment-01",
+        "--wastebin-id", "wastebin-02",
+        "--device-id", "pir-02"
       ] 
     restart: unless-stopped
 
