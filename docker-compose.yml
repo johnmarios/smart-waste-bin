@@ -239,7 +239,7 @@ services:
         "--broker", "broker",
         "--port", "1883",
         "--environment-id", "environment-01",
-        "--wastebin-id", "wastebin-01",
+        "--wastebin-id", "wastebin-02",
         "--device-id", "pir-01"
       ]
     restart: unless-stopped
