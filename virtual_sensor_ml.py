@@ -115,12 +115,6 @@ def main():
     )
 
     parser.add_argument(
-        "--publish-topic",
-        default="smartbin/wastebin-01/prediction",
-        help="MQTT prediction topic"
-    )
-
-    parser.add_argument(
         "--model-path",
         default="models/busy_predictor.joblib",
         help="Path to trained ML model"
