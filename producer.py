@@ -83,7 +83,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--broker", default="localhost")
     parser.add_argument("--client-id", required=True)
     parser.add_argument("--port", type=int, default=1883)
-    parser.add_argument("--topic", default="environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events")
+    #parser.add_argument("--topic", default="environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events")
     parser.add_argument("--qos", type=int, default=1, choices=[0, 1, 2])
     parser.add_argument("--clean-session", type=str_to_bool, default=False)
     parser.add_argument("--pin", type=int)
@@ -396,6 +396,11 @@ def main() -> int:
     try:
         args = parse_args()
         validate_args(args)
+        args.topic = (
+            f"environments/{args.environment_id}"
+            f"/wastebins/{args.wastebin_id}"
+            f"/sensors/{args.device_id}/events"
+        )
     except Exception as exc:
         print(f"[producer] argument error: {exc}", file=sys.stderr)
         return 2

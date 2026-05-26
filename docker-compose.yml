@@ -102,7 +102,7 @@ services:
       python consumer.py
       --broker broker
       --client-id consumer-main
-      --topic environments/+/wastebins/wastebin-01/sensors/pir-01/#
+      --topic environments/+/wastebins/wastebin-01/sensors/pir-motion-sensor-01/#
       --out /data/events.jsonl
       --duration 3000
       --verbose
@@ -127,7 +127,7 @@ services:
       python consumer.py
       --broker broker
       --client-id consumer-slow
-      --topic environments/environment-01/wastebins/+/sensors/pir-01/#
+      --topic environments/environment-01/wastebins/+/sensors/pir-motion-sensor-01/#
       --out /data/events-slow.jsonl
       --consumer-delay 10
       --duration 3000
@@ -161,7 +161,6 @@ services:
       --broker broker
       --client-id producer-main
       --seq-start 0
-      --topic environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events
       --pin 17
       --duration 3000
       --device-id pir-motion-sensor-01
@@ -191,7 +190,6 @@ services:
       --broker broker
       --client-id producer-sim
       --seq-start 0
-      --topic environments/environment-01/wastebins/wastebin-02/sensors/pir-02/events
       --simulate
       --simulate-prob 0.3
       --cooldown 5
@@ -222,7 +220,7 @@ services:
         "--port", "1883",
         "--environment-id", "environment-01",
         "--wastebin-id", "wastebin-01",
-        "--device-id", "pir-01"
+        "--device-id", "pir-motion-sensor-01"
       ]
     restart: unless-stopped
 
@@ -240,7 +238,7 @@ services:
         "--port", "1883",
         "--environment-id", "environment-01",
         "--wastebin-id", "wastebin-02",
-        "--device-id", "pir-01"
+        "--device-id", "pir-motion-sensor-02"
       ]
     restart: unless-stopped
 
@@ -258,7 +256,7 @@ services:
         "--port", "1883",
         "--environment-id", "environment-01",
         "--wastebin-id", "wastebin-01",
-        "--device-id", "pir-01"
+        "--device-id", "pir-motion-sensor-01"
       ] 
     restart: unless-stopped
 
@@ -276,7 +274,7 @@ services:
         "--port", "1883",
         "--environment-id", "environment-01",
         "--wastebin-id", "wastebin-02",
-        "--device-id", "pir-02"
+        "--device-id", "pir-motion-sensor-02"
       ] 
     restart: unless-stopped
 
