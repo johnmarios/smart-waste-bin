@@ -1,3 +1,37 @@
+[{
+    "@context": {
+    "@vocab": "https://schema.org/",
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "bot": "https://w3id.org/bot#",
+    "geo": "http://www.opengis.net/ont/geosparql#",
+    "ck801": "https://gbouloukakis.com/courses/ck801-s26/labs/data_models/",
+
+    "sosa:hosts": { "@type": "@id" },
+    "ck801:containsWastebins": { "@type": "@id" }
+    },
+
+    "@id": "environment-01",
+    "@type": ["bot:Space", "Place"],
+
+    "name": "Kypes II",
+    "description": "classroom where wastebin-01 is deployed.",
+
+    "geo:hasGeometry": {
+    "geo:asWKT": "POINT(38.2889 21.7894)"
+    },
+    "ck801:environmentType": "indoor",
+    "ck801:zone": "Zone A",
+    "ck801:traffic": "high",
+
+    "sosa:hosts": [
+    { "@id": "pir-01" }
+    ],
+
+    "ck801:containsWastebins": [
+    { "@id": "wastebin-01" }
+    ]
+
+},
 {
     "@context": {
     "@vocab": "https://schema.org/",
@@ -10,25 +44,25 @@
     "ck801:containsWastebins": { "@type": "@id" }
     },
 
-    "@id": "urn:dev:team-06:environment-01",
+    "@id": "environment-02",
     "@type": ["bot:Space", "Place"],
 
-    "name": "Kypes",
-    "description": "classroom where wastebin-01 is deployed.",
+    "name": "BA",
+    "description": "classroom where wastebin-02 is deployed.",
 
     "geo:hasGeometry": {
-    "geo:asWKT": "POINT(23.7283 37.9838)"
+    "geo:asWKT": "POINT(38.2847 21.7878)"
     },
     "ck801:environmentType": "indoor",
     "ck801:zone": "Zone A",
     "ck801:traffic": "high",
 
     "sosa:hosts": [
-    { "@id": "urn:dev:team-06:pir-01" }
+    { "@id": "pir-02" }
     ],
 
     "ck801:containsWastebins": [
-    { "@id": "urn:dev:team-06:wastebin-01" }
+    { "@id": "wastebin-02" }
     ]
-
 }
+]
