@@ -40,7 +40,16 @@ services:
       - broker
     # expose the API port to the host machine so that we can access the API endpoints from outside the container
     ports:
-      - "8001:8000"
+      - "5001:5000"
+
+    volumes:
+      - ./:/app
+
+    working_dir: /app
+
+    command: python api.py
+
+    restart: unless-stopped
 
   node-red:
     # use the official Node-RED image from Docker Hub, which provides a visual programming environment for wiring together IoT devices and services
@@ -102,7 +111,7 @@ services:
       python consumer.py
       --broker broker
       --client-id consumer-main
-      --topic environments/+/wastebins/wastebin-01/sensors/pir-motion-sensor-01/#
+      --topic environments/+/wastebins/+/sensors/+/#
       --out /data/events.jsonl
       --duration 3000
       --verbose
