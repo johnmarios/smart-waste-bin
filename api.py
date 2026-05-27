@@ -321,7 +321,17 @@ mqtt_model = api.model(
         "payload": fields.String(
             required=True,
             description="Message payload",
-            example='{"motion": true}'
+            example=json.dumps({
+                "@context": "models/context.jsonld",
+                "@type": "sosa:Observation",
+                "event_time": "2026-05-27T20:26:35.947Z",
+                "device_id": "pir-motion-sensor-01",
+                "wastebin_id": "wastebin-01",
+                "environment_id": "environment-01",
+                "event_type": "motion",
+                "motion_state": "detected",
+                "seq": 999
+            })
         ),
 
         "qos": fields.Integer(
