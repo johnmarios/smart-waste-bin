@@ -776,6 +776,36 @@ class MQTTTopics(Resource):
                 "topics": list(topic_store.values())
             }
 
+# -----------------------------------
+# GET /mqtt/topics/<path:topic>
+# -----------------------------------
+
+@mqtt_ns.route("/topics/<path:topic>")
+
+@mqtt_ns.param(
+    "topic",
+    "MQTT topic path"
+)
+
+class MQTTTopicDetail(Resource):
+
+    @mqtt_ns.response(
+        404,
+        "Topic not found"
+    )
+
+    def get(self, topic):
+
+        with topic_lock:
+
+            if topic not in topic_store:
+
+                api.abort(
+                    404,
+                    f"No message received on topic '{topic}'"
+                )
+
+            return topic_store[topic], 200
 
 #-----------------------------------
 # Run app
