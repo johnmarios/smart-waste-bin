@@ -314,6 +314,13 @@ mqtt_model = api.model(
     }
 )
 
+mqtt_model_summary = api.model(
+    "MQTTPublishSummary",
+    {
+        "topic": fields.String(description="MQTT topic"),
+    }
+)
+
 
 
 # -----------------------------------
@@ -743,6 +750,8 @@ class Events(Resource):
 
 @mqtt_ns.route("/topics")
 class MQTTTopics(Resource):
+
+    @mqtt_ns.marshal_list_with(mqtt_model_summary)
 
     def get(self):
 
