@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
 	parser.add_argument("--broker", default="localhost") # MQTT broker address (default: localhost)
 	parser.add_argument("--client-id", required=True)
 	parser.add_argument("--port", type=int, default=1883)
-	parser.add_argument("--topic", default="environments/+/wastebins/wastebin-01/sensors/pir-01/#")
+	parser.add_argument("--topic", default="environments/+/wastebins/+/sensors/+/#")
 	parser.add_argument("--qos", type=int, default=1, choices=[0, 1, 2])
 	parser.add_argument("--clean-session", type=str_to_bool, default=False)
 	parser.add_argument("--out", required=True)
