@@ -149,6 +149,17 @@ def load_jsonl(filepath):
 
     return records
 
+# -----------------------------------
+# Append event to JSONL file
+# -----------------------------------
+
+def append_event(filepath, event):
+
+    with open(filepath, "a", encoding="utf-8") as file:
+
+        json.dump(event, file, ensure_ascii=False)
+
+        file.write("\n")
 
 
 # -----------------------------------
@@ -642,6 +653,49 @@ class Events(Resource):
         )
 
         return events
+    
+    def post(self):
+
+        data = request.get_json()
+
+        if data is None:
+
+            api.abort(
+                400,
+                "JSON body is required"
+            )
+
+        required_fields = [
+            "device_id",
+            "event_type",
+            "wastebin_id"
+        ]
+
+        missing_fields = []
+
+        for field in required_fields:
+
+            if field not in data:
+
+                missing_fields.append(field)
+
+        if missing_fields:
+
+            api.abort(
+                400,
+                f"Missing required fields: {missing_fields}"
+            )
+
+        if "event_time" not in data:
+
+            data["event_time"] = (
+                datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            )
+
+        append_event(EVENTS_FILE, data)
+
+        return data, 201
+
 
 #-----------------------------------
 # Run app
