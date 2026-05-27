@@ -289,6 +289,15 @@ event_model = api.model(
     }
 )
 
+event_input_model = api.model(
+    "EventInput",
+    {
+        "device_id": fields.String(required=True),
+        "event_type": fields.String(required=True),
+        "wastebin_id": fields.String(required=True),
+        "event_time": fields.String(required=False)
+    }
+)
 
 mqtt_model = api.model(
     "MQTTPublish",
@@ -654,6 +663,8 @@ class Events(Resource):
 
         return events
     
+    @events_ns.marshal_with(event_model, code=201)
+    @events_ns.expect(event_input_model)
     def post(self):
 
         data = request.get_json()
