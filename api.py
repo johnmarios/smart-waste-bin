@@ -321,6 +321,15 @@ mqtt_model_summary = api.model(
     }
 )
 
+mqtt_topics_response_model = api.model(
+    "MQTTTopicsResponse",
+    {
+        "topic_count": fields.Integer,
+        "topics": fields.List(
+            fields.Nested(mqtt_model_summary)
+        )
+    }
+)
 
 
 # -----------------------------------
@@ -751,7 +760,7 @@ class Events(Resource):
 @mqtt_ns.route("/topics")
 class MQTTTopics(Resource):
 
-    @mqtt_ns.marshal_list_with(mqtt_model_summary)
+    @mqtt_ns.marshal_with(mqtt_topics_response_model)
 
     def get(self):
 
@@ -759,8 +768,11 @@ class MQTTTopics(Resource):
 
             return {
                 "topic_count": len(topic_store),
-                "topics": list(topic_store.values())
-            }, 200
+                "topics": [
+                    {"topic": topic}
+                    for topic in topic_store.values()
+                ]
+            }
 
 
 #-----------------------------------
