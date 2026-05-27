@@ -317,34 +317,6 @@ events_parser.add_argument(
 )
 
 
-events_parser2 = reqparse.RequestParser()
-
-events_parser2.add_argument(
-    "limit",
-    type=int,
-    default=50,
-    help="Max events to return"
-)
-
-events_parser2.add_argument(
-    "start",
-    type=str,
-    help="Start datetime (ISO format)"
-)
-
-events_parser2.add_argument(
-    "end",
-    type=str,
-    help="End datetime (ISO format)"
-)
-
-events_parser2.add_argument(
-    "device_id",
-    type=str,
-    help="Filter events by device ID"
-)
-
-
 # -----------------------------------
 # Namespaces
 # -----------------------------------
@@ -645,6 +617,31 @@ class EnvironmentBins(Resource):
 
         return related_bins
 
+
+
+# -----------------------------------
+# GET /events
+# POST /events
+# -----------------------------------
+
+@events_ns.route("/")
+class Events(Resource):
+
+    @events_ns.expect(events_parser)
+
+    @events_ns.marshal_list_with(event_model)
+    def get(self):
+
+        args = events_parser.parse_args()
+
+        events = load_events(
+            EVENTS_FILE,
+            limit=args["limit"],
+            start=args["start"],
+            end=args["end"]
+        )
+
+        return events
 
 #-----------------------------------
 # Run app
