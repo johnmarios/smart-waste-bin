@@ -772,11 +772,8 @@ class MQTTTopics(Resource):
         with topic_lock:
 
             return {
-                "topic_count": len(topic_adress_store),
-                "topics": [
-                    {"topic": topic}
-                    for topic in topic_adress_store.values()
-                ]
+                "topic_count": len(topic_store),
+                "topics": list(topic_store.values())
             }
 
 
