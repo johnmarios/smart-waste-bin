@@ -254,6 +254,13 @@ environment_model = api.model(
     }
 )
 
+environment_summary_model = api.model(
+    "EnvironmentSummary",
+    {
+        "@id": fields.String,
+        "name": fields.String
+    }
+)
 
 event_model = api.model(
     "Event",
@@ -309,7 +316,29 @@ events_parser.add_argument(
     help="End datetime (ISO format)"
 )
 
-events_parser.add_argument(
+
+events_parser2 = reqparse.RequestParser()
+
+events_parser2.add_argument(
+    "limit",
+    type=int,
+    default=50,
+    help="Max events to return"
+)
+
+events_parser2.add_argument(
+    "start",
+    type=str,
+    help="Start datetime (ISO format)"
+)
+
+events_parser2.add_argument(
+    "end",
+    type=str,
+    help="End datetime (ISO format)"
+)
+
+events_parser2.add_argument(
     "device_id",
     type=str,
     help="Filter events by device ID"
@@ -531,6 +560,91 @@ class Sensor(Resource):
             404,
             f"Sensor {sensor_id} not found"
         )
+
+
+# -----------------------------------
+# GET /environment
+# -----------------------------------
+
+@environment_ns.route("/")
+class EnvironmentList(Resource):
+
+    @environment_ns.marshal_list_with(environment_summary_model)
+    def get(self):
+
+        environment_data = load_json(
+            ENVIRONMENT_FILE
+        )
+
+        return environment_data
+
+
+# -----------------------------------
+# GET /environment/<environment_id>
+# -----------------------------------
+
+@environment_ns.route("/<string:environment_id>")
+
+@environment_ns.param(
+    "environment_id",
+    "The environment identifier"
+)
+
+@environment_ns.response(
+    404,
+    "Environment not found"
+)
+
+class Environment(Resource):
+
+    @environment_ns.marshal_with(environment_model)
+    def get(self, environment_id):
+
+        environment_data = load_json(
+            ENVIRONMENT_FILE
+        )
+
+        for env in environment_data:
+
+            if env["@id"] == environment_id:
+                return env
+
+        api.abort(
+            404,
+            f"Environment {environment_id} not found"
+        )
+
+
+# -----------------------------------
+# GET /environment/<id>/bins
+# -----------------------------------
+
+@environment_ns.route(
+    "/<string:environment_id>/bins"
+)
+
+class EnvironmentBins(Resource):
+
+    @environment_ns.marshal_list_with(bin_model)
+    def get(self, environment_id):
+
+        bins = load_json(BINS_FILE)
+
+        related_bins = []
+
+        for bin_item in bins:
+
+            located_in = bin_item.get(
+                "ck801:locatedIn",
+                {}
+            )
+
+            if located_in.get("@id") == environment_id:
+
+                related_bins.append(bin_item)
+
+        return related_bins
+
 
 #-----------------------------------
 # Run app
