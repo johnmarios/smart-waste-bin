@@ -295,7 +295,12 @@ event_input_model = api.model(
         "device_id": fields.String(required=True),
         "event_type": fields.String(required=True),
         "wastebin_id": fields.String(required=True),
-        "event_time": fields.String(required=False)
+        "environment_id": fields.String(required=True),
+        "event_time": fields.String(required=False),
+        "motion_state": fields.String(required=False),
+        "seq": fields.Integer(required=False),
+        "run_id": fields.String(required=False),
+        "pipeline_latency_ms": fields.Float(required=False),
     }
 )
 
@@ -679,7 +684,8 @@ class Events(Resource):
         required_fields = [
             "device_id",
             "event_type",
-            "wastebin_id"
+            "wastebin_id",
+            "environment_id"
         ]
 
         missing_fields = []
@@ -702,6 +708,29 @@ class Events(Resource):
             data["event_time"] = (
                 datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             )
+
+        if "ingest_time" not in data:
+
+            data["ingest_time"] = (
+                datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            )
+
+        if "seq" not in data:
+
+            data["seq"] = 0
+
+        if "pipeline_latency_ms" not in data:
+
+            data["pipeline_latency_ms"] = 0.0
+        
+        if "motion_state" not in data:
+
+            data["motion_state"] = "detected"
+        
+        if "run_id" not in data:
+
+            data["run_id"] = "unknown"
+
 
         append_event(EVENTS_FILE, data)
 
