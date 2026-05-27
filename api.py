@@ -312,10 +312,29 @@ event_input_model = api.model(
 mqtt_model = api.model(
     "MQTTPublish",
     {
-        "topic": fields.String(required=True, description="MQTT topic to publish to"),
-        "payload": fields.String(required=True, description="Message payload"),
-        "qos": fields.Integer(description="Quality of Service", default=1),
-        "retain": fields.Boolean(description="Retain message", default=False),
+        "topic": fields.String(
+            required=True,
+            description="MQTT topic to publish to",
+            example="environments/environment-01/wastebins/wastebin-01/sensors/pir-motion-sensor-01/events"
+        ),
+
+        "payload": fields.String(
+            required=True,
+            description="Message payload",
+            example='{"motion": true}'
+        ),
+
+        "qos": fields.Integer(
+            description="Quality of Service",
+            default=1,
+            example=1
+        ),
+
+        "retain": fields.Boolean(
+            description="Retain message",
+            default=False,
+            example=False
+        ),
     }
 )
 
