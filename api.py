@@ -18,6 +18,8 @@ CONTEXT_FILE = os.path.join(MODELS_DIR, "context.jsonld")
 
 BINS_FILE = os.path.join(MODELS_DIR, "wastebin.jsonld")
 
+SENSORS_FILE = os.path.join(MODELS_DIR, "sensor.jsonld")
+
 # -----------------------------------
 # Load JSON file
 # -----------------------------------
@@ -400,6 +402,39 @@ class Bin(Resource):
             404,
             f"Wastebin {bin_id} not found"
         )
+
+# -----------------------------------
+# GET /bins/<bin_id>/sensors
+# -----------------------------------
+
+@bins_ns.route("/<string:bin_id>/sensors")
+
+@bins_ns.param(
+    "bin_id",
+    "The wastebin identifier"
+)
+
+class BinSensors(Resource):
+
+    @bins_ns.marshal_list_with(sensor_model)
+    def get(self, bin_id):
+
+        sensors = load_json(SENSORS_FILE)
+
+        bin_sensors = []
+
+        for sensor in sensors:
+
+            hosted_by = sensor.get(
+                "sosa:isHostedBy",
+                {}
+            )
+
+            if hosted_by.get("@id") == bin_id:
+
+                bin_sensors.append(sensor)
+
+        return bin_sensors
 
 
 
