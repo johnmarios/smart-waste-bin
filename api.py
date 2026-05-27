@@ -16,6 +16,8 @@ MODELS_DIR = os.path.join(BASE_DIR, "models")
 
 CONTEXT_FILE = os.path.join(MODELS_DIR, "context.jsonld")
 
+BINS_FILE = os.path.join(MODELS_DIR, "wastebin.jsonld.json")
+
 # -----------------------------------
 # Load JSON file
 # -----------------------------------
@@ -343,6 +345,62 @@ class Context(Resource):
 
         return context, 200
 
+# -----------------------------------
+# GET /bins
+# -----------------------------------
+
+@bins_ns.route("/")
+class BinList(Resource):
+
+    @bins_ns.marshal_list_with(bin_model)
+    def get(self):
+
+        bins = load_json(BINS_FILE)
+
+        return bins
+
+
+# -----------------------------------
+# GET /bins/<bin_id>
+# -----------------------------------
+
+@bins_ns.route("/<string:bin_id>")
+
+@bins_ns.param(
+    "bin_id",
+    "The wastebin identifier"
+)
+
+@bins_ns.response(
+    404,
+    "Wastebin not found"
+)
+
+class Bin(Resource):
+
+    @bins_ns.marshal_with(bin_model)
+    def get(self, bin_id):
+
+        bins = load_json(BINS_FILE)
+
+        for bin_item in bins:
+
+            if bin_item["@id"] == bin_id:
+                return bin_item
+
+        api.abort(
+            404,
+            f"Wastebin {bin_id} not found"
+        )
+
+
+
+
+#-----------------------------------
+# Run app
+# -----------------------------------
+
+if __name__ == "__main__":
 
 
     mqtt_client.on_message = on_message
