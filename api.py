@@ -343,3 +343,21 @@ class Context(Resource):
 
         return context, 200
 
+
+
+    mqtt_client.on_message = on_message
+
+    print("CONNECTING MQTT CLIENT")
+
+    mqtt_client.connect("localhost",1883,60)
+
+    mqtt_client.subscribe("smartbin/#",qos=1)
+    mqtt_client.subscribe("environments/#",qos=1)
+
+    mqtt_client.loop_start()
+
+    app.run(
+        debug=True,
+        host="0.0.0.0",
+        port=5000
+    )
