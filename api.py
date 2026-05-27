@@ -210,6 +210,14 @@ bin_model = api.model(
     }
 )
 
+bin_summary_model = api.model(
+    "BinSummary",
+    {
+        "@id": fields.String,
+        "name": fields.String
+    }
+)
+
 
 sensor_model = api.model(
     "Sensor",
@@ -352,7 +360,7 @@ class Context(Resource):
 @bins_ns.route("/")
 class BinList(Resource):
 
-    @bins_ns.marshal_list_with(bin_model)
+    @bins_ns.marshal_list_with(bin_summary_model)
     def get(self):
 
         bins = load_json(BINS_FILE)
