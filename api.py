@@ -807,6 +807,69 @@ class MQTTTopicDetail(Resource):
 
             return topic_store[topic], 200
 
+
+# -----------------------------------
+# POST /mqtt/publish
+# -----------------------------------
+
+@mqtt_ns.route("/publish")
+class MQTTPublish(Resource):
+
+    @mqtt_ns.expect(mqtt_model)
+
+    @mqtt_ns.response(200, "Message published")
+
+    @mqtt_ns.response(400, "Invalid request")
+
+    def post(self):
+
+        data = request.get_json()
+
+        if data is None:
+
+            api.abort(
+                400,
+                "JSON body is required"
+            )
+
+        topic = data.get("topic")
+
+        payload = data.get("payload")
+
+        qos = data.get("qos", 1)
+
+        retain = data.get("retain", False)
+
+        if topic is None or payload is None:
+
+            api.abort(
+                400,
+                "Both 'topic' and 'payload' are required"
+            )
+
+        if qos not in [0, 1, 2]:
+
+            api.abort(
+                400,
+                "QoS must be 0, 1, or 2"
+            )
+
+        result = mqtt_client.publish(
+            topic,
+            payload,
+            qos=qos,
+            retain=retain
+        )
+
+        return {
+            "status": "published",
+            "topic": topic,
+            "payload": payload,
+            "qos": qos,
+            "retain": retain,
+            "mqtt_rc": result.rc
+        }, 200
+
 #-----------------------------------
 # Run app
 # -----------------------------------
