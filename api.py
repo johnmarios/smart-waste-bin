@@ -16,7 +16,7 @@ MODELS_DIR = os.path.join(BASE_DIR, "models")
 
 CONTEXT_FILE = os.path.join(MODELS_DIR, "context.jsonld")
 
-BINS_FILE = os.path.join(MODELS_DIR, "wastebin.jsonld.json")
+BINS_FILE = os.path.join(MODELS_DIR, "wastebin.jsonld")
 
 # -----------------------------------
 # Load JSON file
