@@ -175,6 +175,7 @@ mqtt_client = mqtt.Client(
 )
 
 topic_store = {}
+topic_adress_store = {}
 
 topic_lock = threading.Lock()
 
@@ -193,6 +194,10 @@ def on_message(client, userdata, msg):
             "timestamp": datetime.now(
                 timezone.utc
             ).isoformat().replace("+00:00", "Z")
+        }
+
+        topic_adress_store[msg.topic] = {
+            "topic": msg.topic,
         }
 
 
@@ -767,10 +772,10 @@ class MQTTTopics(Resource):
         with topic_lock:
 
             return {
-                "topic_count": len(topic_store),
+                "topic_count": len(topic_adress_store),
                 "topics": [
                     {"topic": topic}
-                    for topic in topic_store.values()
+                    for topic in topic_adress_store.values()
                 ]
             }
 
