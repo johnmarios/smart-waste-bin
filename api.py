@@ -737,6 +737,23 @@ class Events(Resource):
         return data, 201
 
 
+# -----------------------------------
+# GET /mqtt/topics
+# -----------------------------------
+
+@mqtt_ns.route("/topics")
+class MQTTTopics(Resource):
+
+    def get(self):
+
+        with topic_lock:
+
+            return {
+                "topic_count": len(topic_store),
+                "topics": list(topic_store.values())
+            }, 200
+
+
 #-----------------------------------
 # Run app
 # -----------------------------------
