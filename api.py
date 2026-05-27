@@ -20,6 +20,9 @@ BINS_FILE = os.path.join(MODELS_DIR, "wastebin.jsonld")
 
 SENSORS_FILE = os.path.join(MODELS_DIR, "sensor.jsonld")
 
+ENVIRONMENT_FILE = os.path.join(MODELS_DIR, "environment.jsonld")
+
+EVENTS_FILE = os.path.join(BASE_DIR, "data/consumer/events.jsonl")
 # -----------------------------------
 # Load JSON file
 # -----------------------------------
@@ -436,6 +439,43 @@ class BinSensors(Resource):
 
         return bin_sensors
 
+# -----------------------------------
+# GET /bins/<bin_id>/events
+# -----------------------------------
+
+@bins_ns.route("/<string:bin_id>/events")
+
+@bins_ns.param(
+    "bin_id",
+    "The wastebin identifier"
+)
+
+class BinEvents(Resource):
+
+    @bins_ns.expect(events_parser)
+
+    @bins_ns.marshal_list_with(event_model)
+    def get(self, bin_id):
+
+        args = events_parser.parse_args()
+
+        events = load_events(
+            EVENTS_FILE,
+            limit=args["limit"],            # Limit number of events returned
+            device_id=args["device_id"],    # Filter by device ID if provided
+            start=args["start"],            # Filter by start datetime if provided
+            end=args["end"]                 # Filter by end datetime if provided
+        )
+
+        bin_events = []
+
+        for event in events:
+
+            if event.get("wastebin_id") == bin_id:
+
+                bin_events.append(event)
+
+        return bin_events
 
 
 
