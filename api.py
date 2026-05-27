@@ -349,7 +349,7 @@ class Context(Resource):
 
     print("CONNECTING MQTT CLIENT")
 
-    mqtt_client.connect("localhost",1883,60)
+    mqtt_client.connect("broker",1883,60)
 
     mqtt_client.subscribe("smartbin/#",qos=1)
     mqtt_client.subscribe("environments/#",qos=1)
