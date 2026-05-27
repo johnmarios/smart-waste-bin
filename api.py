@@ -235,6 +235,14 @@ sensor_model = api.model(
     }
 )
 
+sensor_summary_model = api.model(
+    "SensorSummary",
+    {
+        "@id": fields.String,
+        "name": fields.String
+    }
+)
+
 
 environment_model = api.model(
     "Environment",
@@ -462,7 +470,6 @@ class BinEvents(Resource):
         events = load_events(
             EVENTS_FILE,
             limit=args["limit"],            # Limit number of events returned
-            device_id=args["device_id"],    # Filter by device ID if provided
             start=args["start"],            # Filter by start datetime if provided
             end=args["end"]                 # Filter by end datetime if provided
         )
@@ -477,7 +484,53 @@ class BinEvents(Resource):
 
         return bin_events
 
+# -----------------------------------
+# GET /sensors
+# -----------------------------------
 
+@sensors_ns.route("/")
+class SensorList(Resource):
+
+    @sensors_ns.marshal_list_with(sensor_summary_model)
+    def get(self):
+
+        sensors = load_json(SENSORS_FILE)
+
+        return sensors
+
+
+# -----------------------------------
+# GET /sensors/<sensor_id>
+# -----------------------------------
+
+@sensors_ns.route("/<string:sensor_id>")
+
+@sensors_ns.param(
+    "sensor_id",
+    "The sensor identifier"
+)
+
+@sensors_ns.response(
+    404,
+    "Sensor not found"
+)
+
+class Sensor(Resource):
+
+    @sensors_ns.marshal_with(sensor_model)
+    def get(self, sensor_id):
+
+        sensors = load_json(SENSORS_FILE)
+
+        for sensor in sensors:
+
+            if sensor["@id"] == sensor_id:
+                return sensor
+
+        api.abort(
+            404,
+            f"Sensor {sensor_id} not found"
+        )
 
 #-----------------------------------
 # Run app
