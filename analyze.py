@@ -63,6 +63,17 @@ def load_events(filepath):
         )
 
     # -----------------------------------
+    # Latency Conversion
+    # -----------------------------------
+
+    if "latency_seconds" in df.columns:
+
+        df["latency_ms"] = (
+            df["latency_seconds"] * 1000
+        )
+
+
+    # -----------------------------------
     # Time Features
     # -----------------------------------
 
@@ -150,14 +161,18 @@ def plot_events_per_hour(df):
 # Plot Latency Distribution
 # -----------------------------------
 
+# -----------------------------------
+# Plot Latency Distribution
+# -----------------------------------
+
 def plot_latency_distribution(df):
 
     # Check if latency column exists
-    if "latency_seconds" not in df.columns:
+    if "latency_ms" not in df.columns:
 
         print(
             "Skipping latency chart: "
-            "'latency_seconds' column not found."
+            "'latency_ms' column not found."
         )
 
         return
@@ -170,7 +185,7 @@ def plot_latency_distribution(df):
     # Create histogram with KDE
     sns.histplot(
         data=df,
-        x="latency_seconds",
+        x="latency_ms",
         kde=True,
         color="green",
         ax=ax
@@ -178,7 +193,7 @@ def plot_latency_distribution(df):
 
     # Labels and title
     ax.set_xlabel(
-        "Latency (seconds)"
+        "Latency (ms)"
     )
 
     ax.set_ylabel(
@@ -209,7 +224,6 @@ def plot_latency_distribution(df):
     print(
         "Saved: latency_distribution.png"
     )
-
 
 # -----------------------------------
 # Plot Events Over Time
@@ -371,7 +385,7 @@ def plot_latency_over_time(df):
 
     # Check required columns
     if (
-        "latency_seconds" not in df.columns
+        "latency_ms" not in df.columns
         or
         "timestamp" not in df.columns
     ):
@@ -392,7 +406,7 @@ def plot_latency_over_time(df):
     sns.scatterplot(
         data=df,
         x="timestamp",
-        y="latency_seconds",
+        y="latency_ms",
         alpha=0.5,
         s=15,
         color="purple",
@@ -403,7 +417,7 @@ def plot_latency_over_time(df):
     ax.set_xlabel("Time")
 
     ax.set_ylabel(
-        "Latency (seconds)"
+        "Latency (ms)"
     )
 
     ax.set_title(
@@ -433,7 +447,6 @@ def plot_latency_over_time(df):
     print(
         "Saved: latency_over_time.png"
     )
-
 
 
 
