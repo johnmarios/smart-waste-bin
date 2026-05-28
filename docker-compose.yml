@@ -299,11 +299,11 @@ services:
     working_dir: /app
 
     command: >
-      python analytics.py
+      python analyze.py
       data/consumer/events.jsonl
 
     restart: "no"
 
-    
+
 #volumes:
 #  pipeline-data:
