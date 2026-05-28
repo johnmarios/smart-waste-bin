@@ -304,7 +304,7 @@ services:
       generate fromTemplate
       /app/asyncapi.yaml
       @asyncapi/html-template
-      /app/asyncapi-docs
+      -o /app/asyncapi-docs
 
   # this service uses the official nginx image to serve the generated API documentation as a static website 
   #on port 8080, by mapping the asyncapi-docs folder from the host to the nginx html directory in the container, 
