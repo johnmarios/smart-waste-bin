@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import os
 import sys
 
-
 from datetime import datetime
 
 
@@ -47,7 +46,7 @@ def load_events(filepath):
     df = pd.DataFrame(records)
 
     # Keep only latest 100 events
-    df = df.tail(500)
+    df = df.tail(100)
 
     # -----------------------------------
     # Timestamp Handling
