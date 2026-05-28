@@ -287,5 +287,23 @@ services:
       ] 
     restart: unless-stopped
 
+
+  analytics:
+    build: .
+
+    container_name: analytics
+
+    volumes:
+      - ./:/app
+
+    working_dir: /app
+
+    command: >
+      python analytics.py
+      data/consumer/events.jsonl
+
+    restart: "no"
+
+    
 #volumes:
 #  pipeline-data:
