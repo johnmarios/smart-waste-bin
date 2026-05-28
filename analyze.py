@@ -46,6 +46,9 @@ def load_events(filepath):
     # Create DataFrame
     df = pd.DataFrame(records)
 
+    # Keep only latest 100 events
+    df = df.tail(100)
+
     # -----------------------------------
     # Timestamp Handling
     # -----------------------------------
