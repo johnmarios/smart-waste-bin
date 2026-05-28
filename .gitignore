@@ -10,4 +10,6 @@ __pycache__/
 *.jsonl
 
 # Runtime data
-data/
+data/consumer/
+data/homeassistant/
+data/nodered/
