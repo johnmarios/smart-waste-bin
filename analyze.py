@@ -3,6 +3,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+import sys
+
 
 from datetime import datetime
 
@@ -151,11 +153,11 @@ def plot_events_per_hour(df):
 def plot_latency_distribution(df):
 
     # Check if latency column exists
-    if "pipeline_latency_ms" not in df.columns:
+    if "latency_seconds" not in df.columns:
 
         print(
             "Skipping latency chart: "
-            "'pipeline_latency_ms' column not found."
+            "'latency_seconds' column not found."
         )
 
         return
@@ -168,7 +170,7 @@ def plot_latency_distribution(df):
     # Create histogram with KDE
     sns.histplot(
         data=df,
-        x="pipeline_latency_ms",
+        x="latency_seconds",
         kde=True,
         color="green",
         ax=ax
@@ -176,7 +178,7 @@ def plot_latency_distribution(df):
 
     # Labels and title
     ax.set_xlabel(
-        "Pipeline Latency (ms)"
+        "Latency (seconds)"
     )
 
     ax.set_ylabel(
@@ -369,7 +371,7 @@ def plot_latency_over_time(df):
 
     # Check required columns
     if (
-        "pipeline_latency_ms" not in df.columns
+        "latency_seconds" not in df.columns
         or
         "timestamp" not in df.columns
     ):
@@ -390,7 +392,7 @@ def plot_latency_over_time(df):
     sns.scatterplot(
         data=df,
         x="timestamp",
-        y="pipeline_latency_ms",
+        y="latency_seconds",
         alpha=0.5,
         s=15,
         color="purple",
@@ -401,11 +403,11 @@ def plot_latency_over_time(df):
     ax.set_xlabel("Time")
 
     ax.set_ylabel(
-        "Pipeline Latency (ms)"
+        "Latency (seconds)"
     )
 
     ax.set_title(
-        "Pipeline Latency Over Time"
+        "Latency Over Time"
     )
 
     # Rotate x-axis labels
@@ -437,7 +439,6 @@ def plot_latency_over_time(df):
 
 if __name__ == "__main__":
 
-    import sys
 
     # Get filepath from command-line
     if len(sys.argv) > 1:
