@@ -287,5 +287,14 @@ services:
       ] 
     restart: unless-stopped
 
+  asyncapi-docs:
+    image: nginx:alpine
+
+    ports:
+    - "8080:80"
+
+    volumes:
+    - ./asyncapi-docs:/usr/share/nginx/html:ro
+
 #volumes:
 #  pipeline-data:

@@ -1,0 +1,256 @@
+asyncapi: 3.0.0
+info:
+  title: Smart Wastebin Semantic MQTT API
+  version: 1.0.0
+  description: |
+    AsyncAPI specification for the Smart Wastebin IoT platform.
+    The system uses MQTT messaging for event-driven communication
+    between sensors, wastebins, Home Assistant, and backend services.
+
+servers:
+  mosquitto:
+    host: broker:1883
+    protocol: mqtt
+    description: Mosquitto MQTT broker running in Docker
+
+channels:
+
+  motionEvents:
+    address: environments/{environment_id}/wastebins/{wastebin_id}/sensors/{sensor_id}/events
+    description: Full semantic motion events produced by PIR sensors
+    parameters:
+      environment_id:
+        description: Environment identifier
+      wastebin_id:
+        description: Wastebin identifier
+      sensor_id:
+        description: Sensor identifier
+    messages:
+      motionEvent:
+        $ref: '#/components/messages/MotionEvent'
+
+  motionState:
+    address: smartbin/{wastebin_id}/{sensor_id}/motion
+    description: Simplified motion state for Home Assistant integration
+    parameters:
+      wastebin_id:
+        description: Wastebin identifier
+      sensor_id:
+        description: Sensor identifier
+    messages:
+      motionState:
+        $ref: '#/components/messages/MotionState'
+
+  binStatus:
+    address: smartbin/{wastebin_id}/status
+    description: Retained wastebin status updates
+    parameters:
+      wastebin_id:
+        description: Wastebin identifier
+    messages:
+      binStatus:
+        $ref: '#/components/messages/BinStatus'
+
+  mqttPublish:
+    address: mqtt/publish
+    description: MQTT messages published through the REST API endpoint
+    messages:
+      mqttPublish:
+        $ref: '#/components/messages/MQTTPublish'
+
+operations:
+
+  publishMotionEvent:
+    action: send
+    channel:
+      $ref: '#/channels/motionEvents'
+    summary: PIR sensor publishes a semantic motion event
+    description: |
+      Published whenever motion is detected near a smart wastebin.
+      Messages include semantic JSON-LD metadata and event timing.
+
+  consumeMotionEvent:
+    action: receive
+    channel:
+      $ref: '#/channels/motionEvents'
+    summary: Backend consumer processes motion events
+    description: |
+      The backend consumer subscribes to motion events,
+      enriches them with ingestion metadata,
+      and stores them in the JSONL event store.
+
+  publishMotionState:
+    action: send
+    channel:
+      $ref: '#/channels/motionState'
+    summary: Publish simple motion state for Home Assistant
+
+  publishBinStatus:
+    action: send
+    channel:
+      $ref: '#/channels/binStatus'
+    summary: Publish retained wastebin status information
+
+  publishMQTTMessage:
+    action: send
+    channel:
+      $ref: '#/channels/mqttPublish'
+    summary: Publish arbitrary MQTT message using REST API
+
+components:
+
+  messages:
+
+    MotionEvent:
+      name: MotionEvent
+      title: Smart Wastebin Motion Event
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          "@context":
+            type: string
+            description: JSON-LD context reference
+            example: models/context.jsonld
+
+          "@type":
+            type: string
+            description: Semantic event type
+            example: sosa:Observation
+
+          event_time:
+            type: string
+            format: date-time
+            description: ISO timestamp when the event occurred
+
+          device_id:
+            type: string
+            description: Sensor identifier
+            example: pir-motion-sensor-01
+
+          wastebin_id:
+            type: string
+            description: Wastebin identifier
+            example: wastebin-01
+
+          environment_id:
+            type: string
+            description: Environment identifier
+            example: environment-01
+
+          event_type:
+            type: string
+            description: Type of generated event
+            example: motion
+
+          motion_state:
+            type: string
+            enum:
+              - detected
+              - clear
+            description: Motion detection state
+
+          seq:
+            type: integer
+            description: Event sequence number
+
+          run_id:
+            type: string
+            description: Pipeline execution identifier
+
+          ingest_time:
+            type: string
+            format: date-time
+            description: Time when the backend ingested the event
+
+          pipeline_latency_ms:
+            type: number
+            format: float
+            description: End-to-end pipeline latency in milliseconds
+
+        required:
+          - device_id
+          - wastebin_id
+          - environment_id
+          - event_type
+          - event_time
+
+    MotionState:
+      name: MotionState
+      title: Home Assistant Motion State
+      contentType: text/plain
+      payload:
+        type: string
+        enum:
+          - detected
+          - clear
+        description: Simple motion state used by Home Assistant
+
+    BinStatus:
+      name: BinStatus
+      title: Wastebin Status Update
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          wastebin_id:
+            type: string
+            description: Wastebin identifier
+
+          status:
+            type: string
+            description: Current wastebin status
+            example: active
+
+          fillLevel:
+            type: integer
+            minimum: 0
+            maximum: 100
+            description: Current fill level percentage
+
+          collectionZone:
+            type: string
+            description: Assigned collection zone
+
+          wasteType:
+            type: string
+            description: Type of waste collected
+
+          updated_at:
+            type: string
+            format: date-time
+            description: Timestamp of the latest status update
+
+    MQTTPublish:
+      name: MQTTPublish
+      title: Generic MQTT Publish Request
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          topic:
+            type: string
+            description: MQTT topic to publish to
+            example: environments/environment-01/wastebins/wastebin-01/sensors/pir-motion-sensor-01/events
+
+          payload:
+            type: string
+            description: MQTT message payload
+
+          qos:
+            type: integer
+            enum:
+              - 0
+              - 1
+              - 2
+            default: 1
+            description: MQTT Quality of Service level
+
+          retain:
+            type: boolean
+            default: false
+            description: MQTT retained message flag
+
+        required:
+          - topic
+          - payload
