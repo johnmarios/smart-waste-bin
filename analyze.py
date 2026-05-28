@@ -161,10 +161,6 @@ def plot_events_per_hour(df):
 # Plot Latency Distribution
 # -----------------------------------
 
-# -----------------------------------
-# Plot Latency Distribution
-# -----------------------------------
-
 def plot_latency_distribution(df):
 
     # Check if latency column exists
