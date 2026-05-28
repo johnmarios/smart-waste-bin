@@ -287,42 +287,5 @@ services:
       ] 
     restart: unless-stopped
 
-  # this service uses the AsyncAPI CLI tool to generate API documentation from the asyncapi.yaml file 
-  # using the HTML template, and outputs the generated docs to the asyncapi-docs folder, which is then served by 
-  #the nginx container as a static website on port 8080
-  asyncapi-generate:
-    profiles:
-      - tools
-    image: asyncapi/cli
-
-    volumes:
-      - ./:/app
-
-    working_dir: /app
-
-    command: >
-      generate fromTemplate
-      /app/asyncapi.yaml
-      @asyncapi/html-template
-      -o /app/asyncapi-docs
-
-  # this service uses the official nginx image to serve the generated API documentation as a static website 
-  #on port 8080, by mapping the asyncapi-docs folder from the host to the nginx html directory in the container, 
-  #so that we can access the API documentation from a web browser at http://localhost:8080
-  asyncapi-docs:
-    image: nginx:alpine
-
-    ports:
-      - "8080:80"
-
-    volumes:
-      - ./asyncapi-docs:/usr/share/nginx/html:ro
-
-  
-# "docker compose --profile tools run --rm asyncapi-generate" to generate the API documentation, 
-# and then access it at http://localhost:8080
-
-# next step is "docker compose up --build"
-
 #volumes:
 #  pipeline-data:
