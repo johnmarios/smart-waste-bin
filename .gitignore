@@ -7,6 +7,8 @@ __pycache__/
 
 # Runtime generated data
 data/consumer/
+!data/consumer/events.jsonl
+
 data/consumer-slow/
 
 # Home Assistant runtime database
@@ -19,6 +21,9 @@ data/homeassistant/*.log
 # Node-RED runtime modules
 data/nodered/node_modules/
 data/nodered/.npm/
+
+# Charts
+data/charts/
 
 # Logs
 *.log
