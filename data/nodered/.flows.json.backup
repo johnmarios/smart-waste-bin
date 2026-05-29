@@ -1,0 +1,898 @@
+[
+    {
+        "id": "ab1b0ea518202bba",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "8dfeaf083c7d1ada",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "5f6b17c78f861622",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094CE",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "1f73cbac61d226b3",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "3763d7b5aae7b009",
+        "type": "ui-page",
+        "name": "Page 1",
+        "ui": "1f73cbac61d226b3",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "5f6b17c78f861622",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": 0,
+                "cols": 3
+            },
+            {
+                "name": "Tablet",
+                "px": 576,
+                "cols": 6
+            },
+            {
+                "name": "Small Desktop",
+                "px": 768,
+                "cols": 9
+            },
+            {
+                "name": "Desktop",
+                "px": 1024,
+                "cols": 12
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": true,
+        "disabled": false
+    },
+    {
+        "id": "9d4f7430afc06749",
+        "type": "ui-group",
+        "name": "Smart Wastebin",
+        "page": "3763d7b5aae7b009",
+        "width": 6,
+        "height": 1,
+        "order": -1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "3442743711316c35",
+        "type": "mqtt in",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "topic": "environments/+/wastebins/+/sensors/+/events",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "8dfeaf083c7d1ada",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 160,
+        "wires": [
+            [
+                "f9567001f8e1e427",
+                "9dbf1e738bdb16c7"
+            ]
+        ]
+    },
+    {
+        "id": "c0c55b5e868ab60c",
+        "type": "debug",
+        "z": "ab1b0ea518202bba",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "f9567001f8e1e427",
+        "type": "switch",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "property": "payload.motion_state",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "detected",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "clear",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 130,
+        "y": 400,
+        "wires": [
+            [
+                "1f1c7a31bde58a5e",
+                "8f32a2c20ce1d0ec",
+                "1893ec9e0783065d"
+            ],
+            [
+                "b474a8ea81270d4a"
+            ]
+        ]
+    },
+    {
+        "id": "1f1c7a31bde58a5e",
+        "type": "function",
+        "z": "ab1b0ea518202bba",
+        "name": "function 1",
+        "func": "const parts = msg.topic.split(\"/\");\n\nconst environment_id = parts[1];\nconst wastebin_id = parts[3];\nconst device_id = parts[5];\n\n// Get existing per-bin logs\nlet logs = flow.get(\"motion_events\") || {};\n\n// Initialize bin log if needed\nif (!logs[wastebin_id]) {\n    logs[wastebin_id] = [];\n}\n\nconst currentTime = Date.now();\n\nconst windowSizeMinutes = 2;\nconst timeWindow = windowSizeMinutes * 60 * 1000;\n\n// Add new event timestamp ONLY for this bin\nlogs[wastebin_id].push(currentTime);\n\n// Keep only recent events for this bin\nlogs[wastebin_id] = logs[wastebin_id].filter(eventTime => {\n    return (currentTime - eventTime) < timeWindow;\n});\n\n// Save updated logs\nflow.set(\"motion_events\", logs);\n\n// Count events ONLY for this bin\nconst eventCount = logs[wastebin_id].length;\n\nlet activityLevel;\n\n// Determine activity level\nif (eventCount === 0) {\n    activityLevel = \"idle\";\n}\nelse if (eventCount <= 5) {\n    activityLevel = \"low\";\n}\nelse if (eventCount <= 10) {\n    activityLevel = \"medium\";\n}\nelse {\n    activityLevel = \"high\";\n}\n\n// KEEP ORIGINAL PAYLOAD FORMAT\nmsg.payload = {\n    wastebin_id: wastebin_id,\n    activity_level: activityLevel,\n    event_count: eventCount,\n    window_size_minutes: windowSizeMinutes,\n    evaluation_timestamp: new Date(currentTime).toISOString()\n};\n\n// Dynamic topic\nmsg.topic = `smartbin/${wastebin_id}/alerts`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 300,
+        "wires": [
+            [
+                "c0c55b5e868ab60c",
+                "322df7dccf748bef",
+                "5d82c7a112eaa9a6",
+                "84b8e47f1b5bcdcc"
+            ]
+        ]
+    },
+    {
+        "id": "d7eace35ea90e1e4",
+        "type": "mqtt out",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "topic": "",
+        "qos": "1",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "8dfeaf083c7d1ada",
+        "x": 790,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "322df7dccf748bef",
+        "type": "switch",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "property": "payload.activity_level",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "high",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 770,
+        "y": 400,
+        "wires": [
+            [
+                "3fd707046743906f",
+                "e491c43525235859",
+                "5b5d637b0854f2e2"
+            ]
+        ]
+    },
+    {
+        "id": "3fd707046743906f",
+        "type": "debug",
+        "z": "ab1b0ea518202bba",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "6c88f17a33629253",
+        "type": "http request",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://webhook.site/8f417b70-cf6f-4769-866f-5bc8e2d79f16",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1170,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e491c43525235859",
+        "type": "function",
+        "z": "ab1b0ea518202bba",
+        "name": "function 2",
+        "func": "msg.payload = {\n    text: \"Wastebin bin-01 usage is HIGH (\" + msg.payload.event_count + \" events in 10 min)\"\n};\nmsg.headers = {\"Content-Type\": \"Smart-Wastebin/json\"};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 340,
+        "wires": [
+            [
+                "6c88f17a33629253"
+            ]
+        ]
+    },
+    {
+        "id": "5d82c7a112eaa9a6",
+        "type": "mqtt out",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "topic": "",
+        "qos": "1",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "8dfeaf083c7d1ada",
+        "x": 790,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "753351a20e4d243f",
+        "type": "file",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "filename": "filename",
+        "filenameType": "msg",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 320,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b474a8ea81270d4a",
+        "type": "debug",
+        "z": "ab1b0ea518202bba",
+        "name": "debug 3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 460,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "77dcf4e6ba21aa7d",
+        "type": "ui-text",
+        "z": "ab1b0ea518202bba",
+        "group": "9d4f7430afc06749",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "event_count per time window",
+        "label": "Activity Level",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": false,
+        "className": "",
+        "value": "payload.activity_level",
+        "valueType": "msg",
+        "x": 1040,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "e08f0d64153c3b8a",
+        "type": "ui-gauge",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "group": "9d4f7430afc06749",
+        "order": "1",
+        "value": "payload.event_count",
+        "valueType": "msg",
+        "width": "6",
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Events per time window",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "units",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "5",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "10",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": "30",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1030,
+        "y": 580,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9e0a6ed18a5ea36d",
+        "type": "comment",
+        "z": "ab1b0ea518202bba",
+        "name": "ReadMe",
+        "info": "-->payload from producer\n\n-->switch for motion detected or clear\n\n## If detected:\n\n# function 1 determines activity level (function 5 is clone of 1 with different topic)\n\n-->payload is sent to smartbin/bin-01/usage/nodered\n(can be checked from terminal)\n\n-->payload is sent to smartbin/bin-01/alerts\n(straight to home assistant)\n\n-->also to gauge and text for ui\n(can be checked in \"http://<raspberry-ip>:1881/dashboard)\n-->function 4 formats payload for ui\n\n-->Write events in file one per bin, func 8 dynamicly changes filename\n\n# -->swich for high \n\n-->POST in API\n-->format message in function 3 and publish notification in dsahboard\n\n\n",
+        "x": 160,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "82c37bdb54271630",
+        "type": "ui-notification",
+        "z": "ab1b0ea518202bba",
+        "ui": "1f73cbac61d226b3",
+        "position": "top right",
+        "colorDefault": true,
+        "color": "#000000",
+        "displayTime": "5",
+        "showCountdown": true,
+        "outputs": 1,
+        "allowDismiss": true,
+        "dismissText": "Close",
+        "allowConfirm": false,
+        "confirmText": "Confirm",
+        "raw": true,
+        "className": "",
+        "name": "High activity notification",
+        "x": 1250,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fb99721d1d295a7c",
+        "type": "function",
+        "z": "ab1b0ea518202bba",
+        "name": "function 3",
+        "func": "msg.payload = \"High activity detected in Smart Wastebin 01!\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 400,
+        "wires": [
+            [
+                "82c37bdb54271630"
+            ]
+        ]
+    },
+    {
+        "id": "36666a49f53a305d",
+        "type": "ui-text-input",
+        "z": "ab1b0ea518202bba",
+        "group": "9d4f7430afc06749",
+        "name": "",
+        "label": "Logs-Bin-01",
+        "order": 0,
+        "width": "6",
+        "height": "5",
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "textarea",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": true,
+        "sendOnDelay": false,
+        "sendOnBlur": true,
+        "sendOnEnter": false,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 1150,
+        "y": 620,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8fb8a188562018fd",
+        "type": "function",
+        "z": "ab1b0ea518202bba",
+        "name": "function 4",
+        "func": "const ts = new Date(msg.payload.evaluation_timestamp);\n\n\nmsg.payload =\n    \"--------------------------------------------------\" +\n    \"\\nActivity Level: \" + msg.payload.activity_level +\n    \"\\nEvent Count: \" + msg.payload.event_count +\n    \"\\nWindow Size: \" + msg.payload.window_size_minutes + \" min\" +\n    \"\\nTime: \" + ts.toLocaleString(\"el-GR\", {\n        timeZone: \"Europe/Athens\"\n    }) +\n    \"\\n\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 620,
+        "wires": [
+            [
+                "36666a49f53a305d"
+            ]
+        ]
+    },
+    {
+        "id": "8f32a2c20ce1d0ec",
+        "type": "function",
+        "z": "ab1b0ea518202bba",
+        "name": "function 5",
+        "func": "const parts = msg.topic.split(\"/\");\n\nconst environment_id = parts[1];\nconst wastebin_id = parts[3];\nconst device_id = parts[5];\n\nlet counts = flow.get(\"counts\") || {};\n\nif (!counts[wastebin_id]) {\n    counts[wastebin_id] = [];\n}\n\nconst now = Date.now();\n\ncounts[wastebin_id].push(now);\n\ncounts[wastebin_id] = counts[wastebin_id].filter(\n    t => now - t < 2 * 60 * 1000\n);\n\nconst event_count = counts[wastebin_id].length;\n\nflow.set(\"counts\", counts);\n\nlet activity_level = \"low\";\n\nif (event_count > 10) {\n    activity_level = \"high\";\n}\nelse if (event_count > 5) {\n    activity_level = \"medium\";\n}\n\nmsg.payload = {\n    wastebin_id: wastebin_id,\n    activity_level: activity_level,\n    event_count: event_count\n};\n\nmsg.topic = `smartbin/${msg.payload.wastebin_id}/usage/nodered`;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 260,
+        "wires": [
+            [
+                "d7eace35ea90e1e4"
+            ]
+        ]
+    },
+    {
+        "id": "84b8e47f1b5bcdcc",
+        "type": "switch",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "property": "payload.wastebin_id",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "wastebin-01",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "wastebin-02",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 750,
+        "y": 600,
+        "wires": [
+            [
+                "77dcf4e6ba21aa7d",
+                "e08f0d64153c3b8a",
+                "8fb8a188562018fd",
+                "48eb1e6c5164cfe4"
+            ],
+            [
+                "a91eaf9116e03865",
+                "df5aebc63c59f755",
+                "8c0d9f200f37e39b",
+                "fc50c09c2b9afd7b"
+            ]
+        ]
+    },
+    {
+        "id": "a91eaf9116e03865",
+        "type": "ui-text",
+        "z": "ab1b0ea518202bba",
+        "group": "9d4f7430afc06749",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "event_count per time window 2",
+        "label": "Activity Level",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": false,
+        "className": "",
+        "value": "payload.activity_level",
+        "valueType": "msg",
+        "x": 1050,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "df5aebc63c59f755",
+        "type": "ui-gauge",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "group": "9d4f7430afc06749",
+        "order": "1",
+        "value": "payload.event_count",
+        "valueType": "msg",
+        "width": "6",
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Events per time window",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "units",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "5",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "10",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": "30",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1030,
+        "y": 740,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fc50c09c2b9afd7b",
+        "type": "function",
+        "z": "ab1b0ea518202bba",
+        "name": "function 6",
+        "func": "const ts = new Date(msg.payload.evaluation_timestamp);\n\n\nmsg.payload =\n    \"--------------------------------------------------\" +\n    \"\\nActivity Level: \" + msg.payload.activity_level +\n    \"\\nEvent Count: \" + msg.payload.event_count +\n    \"\\nWindow Size: \" + msg.payload.window_size_minutes + \" min\" +\n    \"\\nTime: \" + ts.toLocaleString(\"el-GR\", {\n        timeZone: \"Europe/Athens\"\n    }) +\n    \"\\n\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 780,
+        "wires": [
+            [
+                "276bbbd28fa82e51"
+            ]
+        ]
+    },
+    {
+        "id": "276bbbd28fa82e51",
+        "type": "ui-text-input",
+        "z": "ab1b0ea518202bba",
+        "group": "9d4f7430afc06749",
+        "name": "",
+        "label": "Logs Bin-02",
+        "order": 0,
+        "width": "6",
+        "height": "5",
+        "topic": "topic",
+        "topicType": "msg",
+        "mode": "textarea",
+        "tooltip": "",
+        "delay": 300,
+        "passthru": true,
+        "sendOnDelay": false,
+        "sendOnBlur": true,
+        "sendOnEnter": true,
+        "className": "",
+        "clearable": false,
+        "sendOnClear": false,
+        "icon": "",
+        "iconPosition": "left",
+        "iconInnerPosition": "inside",
+        "x": 1150,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5b5d637b0854f2e2",
+        "type": "switch",
+        "z": "ab1b0ea518202bba",
+        "name": "",
+        "property": "payload.wastebin_id",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "wastebin-01",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "wastebin-02",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 910,
+        "y": 420,
+        "wires": [
+            [
+                "fb99721d1d295a7c"
+            ],
+            [
+                "140e35514cfabdb8"
+            ]
+        ]
+    },
+    {
+        "id": "140e35514cfabdb8",
+        "type": "function",
+        "z": "ab1b0ea518202bba",
+        "name": "function 7",
+        "func": "msg.payload = \"High activity detected in Smart Wastebin 02!\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 440,
+        "wires": [
+            [
+                "0df290311c2d5091"
+            ]
+        ]
+    },
+    {
+        "id": "0df290311c2d5091",
+        "type": "ui-notification",
+        "z": "ab1b0ea518202bba",
+        "ui": "1f73cbac61d226b3",
+        "position": "top right",
+        "colorDefault": true,
+        "color": "#000000",
+        "displayTime": "5",
+        "showCountdown": true,
+        "outputs": 1,
+        "allowDismiss": true,
+        "dismissText": "Close",
+        "allowConfirm": false,
+        "confirmText": "Confirm",
+        "raw": true,
+        "className": "",
+        "name": "High activity notification",
+        "x": 1250,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8c0d9f200f37e39b",
+        "type": "debug",
+        "z": "ab1b0ea518202bba",
+        "name": "debug 4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "48eb1e6c5164cfe4",
+        "type": "debug",
+        "z": "ab1b0ea518202bba",
+        "name": "debug 5",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "9dbf1e738bdb16c7",
+        "type": "debug",
+        "z": "ab1b0ea518202bba",
+        "name": "debug 6",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "1893ec9e0783065d",
+        "type": "function",
+        "z": "ab1b0ea518202bba",
+        "name": "function 8",
+        "func": "msg.filename =\n    \"/data/detected_events_\" +\n    msg.payload.wastebin_id +\n    \"_red.log\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 620,
+        "wires": [
+            [
+                "753351a20e4d243f"
+            ]
+        ]
+    }
+]

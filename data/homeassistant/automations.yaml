@@ -1,0 +1,210 @@
+- id: '1779633653938'
+  alias: Item counter (auto)
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.device_pir_motion_sensor_01_motion_sensor
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions: []
+  actions:
+  - action: counter.increment
+    metadata: {}
+    target:
+      entity_id: counter.item_counter
+    data: {}
+  mode: single
+- id: '1779635066696'
+  alias: Wastebin capacity is 50%
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - counter.item_counter
+    above: 50
+  conditions: []
+  actions:
+  - action: notify.persistent_notification
+    metadata: {}
+    data:
+      message: Wastebin capacity is 50%
+      title: Capacity warning 50%
+  mode: single
+- id: '1779635319852'
+  alias: Daily count reset
+  description: ''
+  triggers:
+  - trigger: time
+    at: '23:59:59'
+  conditions: []
+  actions:
+  - action: counter.reset
+    metadata: {}
+    target:
+      entity_id: counter.item_counter
+    data: {}
+  mode: single
+- id: '1779638161635'
+  alias: Capacity warning 100% (auto)
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.device_pir_motion_sensor_01_motion_sensor
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: numeric_state
+    entity_id: counter.item_counter
+    above: 99
+  actions:
+  - action: notify.persistent_notification
+    metadata: {}
+    data:
+      message: The bin is full !!!
+      title: Capacity warning 100%
+  mode: single
+- id: '1779733990431'
+  alias: Wastebin Alert
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.device_pir_motion_sensor_01_motion_sensor
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions: []
+  actions:
+  - action: notify.persistent_notification
+    metadata: {}
+    data:
+      message: Motion detected at Smart Wastebin 01 — {{ now().strftime('%H:%M:%S')
+        }}
+      title: Wastebin Alert
+  mode: single
+- id: '1779734387500'
+  alias: Counter reset on HA shutdown
+  description: ''
+  triggers:
+  - trigger: homeassistant
+    event: shutdown
+  conditions: []
+  actions:
+  - action: counter.reset
+    metadata: {}
+    target:
+      entity_id: counter.item_counter
+    data: {}
+  mode: single
+- id: '1779791833812'
+  alias: Counter 2nd bin (auto)
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.device_pir_motion_sensor_02_motion_sensor
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions: []
+  actions:
+  - action: counter.increment
+    metadata: {}
+    target:
+      entity_id: counter.item_counter_2nd_bin
+    data: {}
+  mode: single
+- id: '1779815057213'
+  alias: Wastebin_alert_bin 2
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.device_pir_motion_sensor_02_motion_sensor
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions: []
+  actions:
+  - action: notify.persistent_notification
+    metadata: {}
+    data:
+      message: Motion detected at Smart Wastebin 02 — {{ now().strftime('%H:%M:%S')
+        }}
+      title: Wastebin Alert
+  mode: single
+- id: '1779815162413'
+  alias: Wastebin 2 50% warning
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - counter.item_counter_2nd_bin
+    above: 50
+  conditions: []
+  actions:
+  - action: notify.persistent_notification
+    metadata: {}
+    data:
+      message: Wastebin 02 capacity is 50%
+      title: Capacity warning 50%
+  mode: single
+- id: '1779815204271'
+  alias: Daily reset bin 2
+  description: ''
+  triggers:
+  - trigger: time
+    at: '23:59:59'
+  conditions: []
+  actions:
+  - action: counter.reset
+    metadata: {}
+    target:
+      entity_id: counter.item_counter_2nd_bin
+    data: {}
+  mode: single
+- id: '1779815229111'
+  alias: Shutdown reset bin 2
+  description: ''
+  triggers:
+  - trigger: homeassistant
+    event: shutdown
+  conditions: []
+  actions:
+  - action: counter.reset
+    metadata: {}
+    target:
+      entity_id: counter.item_counter_2nd_bin
+    data: {}
+  mode: single
+- id: '1779815293691'
+  alias: Bin 2 is full
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.device_pir_motion_sensor_02_motion_sensor
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions:
+  - condition: numeric_state
+    entity_id: counter.item_counter_2nd_bin
+    above: 99
+  actions:
+  - action: notify.persistent_notification
+    metadata: {}
+    data:
+      message: The bin 02 is full !!!
+      title: Capacity warning 100%
+  mode: single
