@@ -18,6 +18,7 @@ data/homeassistant/*.log
 
 # Node-RED runtime modules
 data/nodered/node_modules/
+data/nodered/.npm/
 
 # Logs
 *.log
