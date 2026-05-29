@@ -480,6 +480,10 @@ def plots_for_file(filepath):
             "detected_events_",
             ""
         )
+        .replace(
+            "_red",
+            ""
+        )
     )
 
     generate_charts(
@@ -508,7 +512,7 @@ def plot_for_bins():
 
     files = sorted(
         logs_dir.glob(
-            "detected_events_wastebin*.jsonl"
+            "detected_events_*_red.log"
         )
     )
 
