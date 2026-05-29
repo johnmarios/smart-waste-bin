@@ -5,11 +5,18 @@ venv/
 __pycache__/
 *.pyc
 
-# Local logs
-*.log
-*.jsonl
-
-# Runtime data
+# Runtime generated data
 data/consumer/
-data/homeassistant/
-data/nodered/
+data/consumer-slow/
+
+# Home Assistant runtime database
+data/homeassistant/.storage/
+data/homeassistant/backups/
+data/homeassistant/*.db
+data/homeassistant/*.log
+
+# Node-RED runtime modules
+data/nodered/node_modules/
+
+# Logs
+*.log
