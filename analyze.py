@@ -3,9 +3,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
-import sys
 
-from datetime import datetime
+from pathlib import Path
 
 
 sns.set_theme(style="whitegrid")
@@ -39,19 +38,17 @@ def load_events(filepath):
                 records.append(record)
 
             except json.JSONDecodeError:
-
                 continue
 
-    # Create DataFrame
     df = pd.DataFrame(records)
 
-    # Keep only latest 100 events
+    if df.empty:
+        return df
+
+    # Keep latest 100 events
     df = df.tail(100)
 
-    # -----------------------------------
-    # Timestamp Handling
-    # -----------------------------------
-
+    # Timestamp
     if "resultTime" in df.columns:
 
         df["timestamp"] = pd.to_datetime(
@@ -64,24 +61,20 @@ def load_events(filepath):
             df["event_time"]
         )
 
-    # -----------------------------------
-    # Latency Conversion
-    # -----------------------------------
-
+    # Latency
     if "latency_seconds" in df.columns:
 
         df["latency_ms"] = (
             df["latency_seconds"] * 1000
         )
 
-
-    # -----------------------------------
     # Time Features
-    # -----------------------------------
-
     if "timestamp" in df.columns:
 
-        df["hour"] = df["timestamp"].dt.hour
+        df["hour"] = (
+            df["timestamp"]
+            .dt.hour
+        )
 
         df["day_of_week"] = (
             df["timestamp"]
@@ -102,24 +95,24 @@ def load_events(filepath):
 
 
 # -----------------------------------
-# Plot Events Per Hour
+# Events Per Hour
 # -----------------------------------
 
-def plot_events_per_hour(df):
+def plot_events_per_hour(df, suffix):
 
-    # Group by hour and count events
+    if "hour" not in df.columns:
+        return
+
     hourly = (
         df.groupby("hour")
         .size()
         .reset_index(name="event_count")
     )
 
-    # Create figure
     fig, ax = plt.subplots(
         figsize=(10, 5)
     )
 
-    # Create bar chart
     sns.barplot(
         data=hourly,
         x="hour",
@@ -128,59 +121,44 @@ def plot_events_per_hour(df):
         ax=ax
     )
 
-    # Labels and title
-    ax.set_xlabel("Hour of Day")
+    ax.set_xlabel(
+        "Hour of Day"
+    )
 
-    ax.set_ylabel("Number of Events")
+    ax.set_ylabel(
+        "Number of Events"
+    )
 
     ax.set_title(
-        "Motion Events by Hour of Day"
+        f"Motion Events by Hour ({suffix})"
     )
 
-    # Adjust layout
     plt.tight_layout()
 
-    # Save chart
-    output_path = os.path.join(
-        CHARTS_DIR,
-        "events_per_hour.png"
-    )
-
     plt.savefig(
-        output_path,
+        os.path.join(
+            CHARTS_DIR,
+            f"events_per_hour_{suffix}.png"
+        ),
         dpi=150
     )
 
-    # Close figure
     plt.close(fig)
 
-    print(
-        "Saved: events_per_hour.png"
-    )
-
 
 # -----------------------------------
-# Plot Latency Distribution
+# Latency Distribution
 # -----------------------------------
 
-def plot_latency_distribution(df):
+def plot_latency_distribution(df, suffix):
 
-    # Check if latency column exists
     if "latency_ms" not in df.columns:
-
-        print(
-            "Skipping latency chart: "
-            "'latency_ms' column not found."
-        )
-
         return
 
-    # Create figure
     fig, ax = plt.subplots(
         figsize=(10, 5)
     )
 
-    # Create histogram with KDE
     sns.histplot(
         data=df,
         x="latency_ms",
@@ -189,7 +167,6 @@ def plot_latency_distribution(df):
         ax=ax
     )
 
-    # Labels and title
     ax.set_xlabel(
         "Latency (ms)"
     )
@@ -199,49 +176,41 @@ def plot_latency_distribution(df):
     )
 
     ax.set_title(
-        "Distribution of Pipeline Latency"
+        f"Latency Distribution ({suffix})"
     )
 
-    # Adjust layout
     plt.tight_layout()
 
-    # Save chart
-    output_path = os.path.join(
-        CHARTS_DIR,
-        "latency_distribution.png"
-    )
-
     plt.savefig(
-        output_path,
+        os.path.join(
+            CHARTS_DIR,
+            f"latency_distribution_{suffix}.png"
+        ),
         dpi=150
     )
 
-    # Close figure
     plt.close(fig)
 
-    print(
-        "Saved: latency_distribution.png"
-    )
 
 # -----------------------------------
-# Plot Events Over Time
+# Events Over Time
 # -----------------------------------
 
-def plot_events_over_time(df):
+def plot_events_over_time(df, suffix):
 
-    # Group by date and count events
+    if "date" not in df.columns:
+        return
+
     daily = (
         df.groupby("date")
         .size()
         .reset_index(name="event_count")
     )
 
-    # Create figure
     fig, ax = plt.subplots(
         figsize=(10, 5)
     )
 
-    # Create line chart
     sns.lineplot(
         data=daily,
         x="date",
@@ -251,49 +220,46 @@ def plot_events_over_time(df):
         ax=ax
     )
 
-    # Labels and title
     ax.set_xlabel("Date")
 
-    ax.set_ylabel("Number of Events")
+    ax.set_ylabel(
+        "Number of Events"
+    )
 
     ax.set_title(
-        "Daily Motion Events Over Time"
+        f"Events Over Time ({suffix})"
     )
 
-    # Rotate x-axis labels
-    plt.xticks(rotation=45)
+    plt.xticks(
+        rotation=45
+    )
 
-    # Adjust layout
     plt.tight_layout()
 
-    # Save chart
-    output_path = os.path.join(
-        CHARTS_DIR,
-        "events_over_time.png"
-    )
-
     plt.savefig(
-        output_path,
+        os.path.join(
+            CHARTS_DIR,
+            f"events_over_time_{suffix}.png"
+        ),
         dpi=150
     )
 
-    # Close figure
     plt.close(fig)
 
-    print(
-        "Saved: events_over_time.png"
-    )
-
-
-
 
 # -----------------------------------
-# Plot Heatmap
+# Heatmap
 # -----------------------------------
 
-def plot_heatmap(df):
+def plot_heatmap(df, suffix):
 
-    # Day order
+    if (
+        "hour" not in df.columns
+        or
+        "day_of_week" not in df.columns
+    ):
+        return
+
     day_order = [
         "Monday",
         "Tuesday",
@@ -304,7 +270,6 @@ def plot_heatmap(df):
         "Sunday"
     ]
 
-    # Group by day and hour
     pivot = (
         df.groupby(
             ["day_of_week", "hour"]
@@ -313,25 +278,22 @@ def plot_heatmap(df):
         .reset_index(name="count")
     )
 
-    # Create pivot table
     pivot = pivot.pivot(
         index="day_of_week",
         columns="hour",
         values="count"
     )
 
-    # Replace missing values
     pivot = pivot.fillna(0)
 
-    # Reorder days
-    pivot = pivot.reindex(day_order)
+    pivot = pivot.reindex(
+        day_order
+    )
 
-    # Create figure
     fig, ax = plt.subplots(
         figsize=(12, 5)
     )
 
-    # Create heatmap
     sns.heatmap(
         pivot,
         cmap="YlOrRd",
@@ -341,7 +303,6 @@ def plot_heatmap(df):
         ax=ax
     )
 
-    # Labels and title
     ax.set_xlabel(
         "Hour of Day"
     )
@@ -349,58 +310,39 @@ def plot_heatmap(df):
     ax.set_ylabel("")
 
     ax.set_title(
-        "Motion Events: Hour × Day of Week"
+        f"Heatmap ({suffix})"
     )
 
-    # Adjust layout
     plt.tight_layout()
 
-    # Save chart
-    output_path = os.path.join(
-        CHARTS_DIR,
-        "heatmap_hour_day.png"
-    )
-
     plt.savefig(
-        output_path,
+        os.path.join(
+            CHARTS_DIR,
+            f"heatmap_hour_day_{suffix}.png"
+        ),
         dpi=150
     )
 
-    # Close figure
     plt.close(fig)
 
-    print(
-        "Saved: heatmap_hour_day.png"
-    )
-
-
 
 # -----------------------------------
-# Plot Latency Over Time
+# Latency Over Time
 # -----------------------------------
 
-def plot_latency_over_time(df):
+def plot_latency_over_time(df, suffix):
 
-    # Check required columns
     if (
         "latency_ms" not in df.columns
         or
         "timestamp" not in df.columns
     ):
-
-        print(
-            "Skipping latency-over-time chart: "
-            "required columns not found."
-        )
-
         return
 
-    # Create figure
     fig, ax = plt.subplots(
         figsize=(10, 5)
     )
 
-    # Create scatter plot
     sns.scatterplot(
         data=df,
         x="timestamp",
@@ -411,88 +353,173 @@ def plot_latency_over_time(df):
         ax=ax
     )
 
-    # Labels and title
-    ax.set_xlabel("Time")
+    ax.set_xlabel(
+        "Time"
+    )
 
     ax.set_ylabel(
         "Latency (ms)"
     )
 
     ax.set_title(
-        "Latency Over Time"
+        f"Latency Over Time ({suffix})"
     )
 
-    # Rotate x-axis labels
-    plt.xticks(rotation=45)
+    plt.xticks(
+        rotation=45
+    )
 
-    # Adjust layout
     plt.tight_layout()
 
-    # Save chart
-    output_path = os.path.join(
-        CHARTS_DIR,
-        "latency_over_time.png"
-    )
-
     plt.savefig(
-        output_path,
+        os.path.join(
+            CHARTS_DIR,
+            f"latency_over_time_{suffix}.png"
+        ),
         dpi=150
     )
 
-    # Close figure
     plt.close(fig)
 
-    print(
-        "Saved: latency_over_time.png"
+
+# -----------------------------------
+# Generate All Charts
+# -----------------------------------
+
+def generate_charts(df, suffix):
+
+    plot_events_per_hour(
+        df,
+        suffix
+    )
+
+    plot_latency_distribution(
+        df,
+        suffix
+    )
+
+    plot_events_over_time(
+        df,
+        suffix
+    )
+
+    plot_heatmap(
+        df,
+        suffix
+    )
+
+    plot_latency_over_time(
+        df,
+        suffix
     )
 
 
+# -----------------------------------
+# All Bins Combined
+# -----------------------------------
+
+def plots_for_all_events():
+
+    filepath = (
+        "data/consumer/events.jsonl"
+    )
+
+    if not os.path.exists(
+        filepath
+    ):
+        return
+
+    print(
+        f"Processing {filepath}"
+    )
+
+    df = load_events(
+        filepath
+    )
+
+    if df.empty:
+        return
+
+    generate_charts(
+        df,
+        "all"
+    )
+
+
+# -----------------------------------
+# Single Bin
+# -----------------------------------
+
+def plots_for_file(filepath):
+
+    print(
+        f"Processing {filepath}"
+    )
+
+    df = load_events(
+        filepath
+    )
+
+    if df.empty:
+        return
+
+    suffix = (
+        Path(filepath)
+        .stem
+        .replace(
+            "events_",
+            ""
+        )
+    )
+
+    generate_charts(
+        df,
+        suffix
+    )
+
+
+# -----------------------------------
+# All Individual Bins
+# -----------------------------------
+
+def plot_for_bins():
+
+    logs_dir = Path(
+        "data/nodered/logs"
+    )
+
+    if not logs_dir.exists():
+
+        print(
+            f"{logs_dir} not found"
+        )
+
+        return
+
+    files = sorted(
+        logs_dir.glob(
+            "events_wastebin*.jsonl"
+        )
+    )
+
+    for file in files:
+
+        plots_for_file(
+            str(file)
+        )
+
+
+# -----------------------------------
+# Main
+# -----------------------------------
 
 if __name__ == "__main__":
 
+    plots_for_all_events()
 
-    # Get filepath from command-line
-    if len(sys.argv) > 1:
-
-        filepath = sys.argv[1]
-
-    else:
-
-        filepath = "data/consumer/events.jsonl"
+    plot_for_bins()
 
     print(
-        f"Loading events from: {filepath}"
-    )
-
-    # Load events
-    df = load_events(filepath)
-
-    print(
-        f"Loaded {len(df)} events"
-    )
-
-    # Check if DataFrame is empty
-    if df.empty:
-
-        print(
-            "No data found. "
-            "Run the pipeline first."
-        )
-
-        sys.exit(1)
-
-    # Generate charts
-    plot_events_per_hour(df)
-
-    plot_latency_distribution(df)
-
-    plot_events_over_time(df)
-
-    plot_heatmap(df)
-
-    plot_latency_over_time(df)
-
-    print(
-        f"All charts saved to: "
+        f"\nAll charts saved in "
         f"{CHARTS_DIR}"
     )
