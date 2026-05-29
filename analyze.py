@@ -512,7 +512,7 @@ def plot_for_bins():
 
     files = sorted(
         logs_dir.glob(
-            "detected_events_*_red.log"
+            "detected_events_*_red.jsonl"
         )
     )
 
