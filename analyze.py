@@ -143,6 +143,8 @@ def plot_events_per_hour(df, suffix):
         dpi=150
     )
 
+    print(f"Saved: events_per_hour_{suffix}.png")
+
     plt.close(fig)
 
 
@@ -188,6 +190,8 @@ def plot_latency_distribution(df, suffix):
         ),
         dpi=150
     )
+
+    print(f"Saved: latency_distribution_{suffix}.png")
 
     plt.close(fig)
 
@@ -243,6 +247,8 @@ def plot_events_over_time(df, suffix):
         ),
         dpi=150
     )
+
+    print(f"Saved: events_over_time_{suffix}.png")
 
     plt.close(fig)
 
@@ -323,6 +329,8 @@ def plot_heatmap(df, suffix):
         dpi=150
     )
 
+    print(f"Saved: heatmap_hour_day_{suffix}.png")
+
     plt.close(fig)
 
 
@@ -379,6 +387,8 @@ def plot_latency_over_time(df, suffix):
         dpi=150
     )
 
+    print(f"Saved: latency_over_time_{suffix}.png")
+    
     plt.close(fig)
 
 
@@ -467,7 +477,7 @@ def plots_for_file(filepath):
         Path(filepath)
         .stem
         .replace(
-            "events_",
+            "detected_events_",
             ""
         )
     )
@@ -498,9 +508,11 @@ def plot_for_bins():
 
     files = sorted(
         logs_dir.glob(
-            "events_wastebin*.jsonl"
+            "detected_events_wastebin*.jsonl"
         )
     )
+
+    print(f"Found {len(files)} bin files")
 
     for file in files:
 
