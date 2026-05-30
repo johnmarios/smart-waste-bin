@@ -183,11 +183,11 @@ services:
           cpus: '0.50'
     restart: unless-stopped
 
-  producer-sim:
+  producer-sim-02:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: iot-producer-sim
+    container_name: iot-producer-sim-02
     depends_on:
       - broker
     # this service is for simulating the producer without needing access to GPIO devices, 
@@ -304,6 +304,70 @@ services:
 
     restart: "no"
 
+  # wastebin-03
 
-#volumes:
-#  pipeline-data:
+  producer-sim-03:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iot-producer-sim-03
+    depends_on:
+      - broker
+    # this service is for simulating the producer without needing access to GPIO devices, 
+    # so it doesn't require privileged access or device mappings
+    ##profiles: 
+    ##  - sim
+    command: >
+      python producer.py
+      --broker broker
+      --client-id producer-sim-03
+      --seq-start 0
+      --simulate
+      --simulate-prob 0.3
+      --cooldown 5
+      --sample-interval 0.2
+      --duration 3000
+      --device-id pir-motion-sensor-03
+      --wastebin-id wastebin-03
+      --environment-id environment-02
+      --verbose
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.50'
+    restart: unless-stopped
+
+  # wastebin-04
+
+  producer-sim-04:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iot-producer-sim-04
+    depends_on:
+      - broker
+    # this service is for simulating the producer without needing access to GPIO devices, 
+    # so it doesn't require privileged access or device mappings
+    ##profiles: 
+    ##  - sim
+    command: >
+      python producer.py
+      --broker broker
+      --client-id producer-sim-04
+      --seq-start 0
+      --simulate
+      --simulate-prob 0.7
+      --cooldown 5
+      --sample-interval 0.2
+      --duration 3000
+      --device-id pir-motion-sensor-04
+      --wastebin-id wastebin-04
+      --environment-id environment-01
+      --verbose
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.50'
+    restart: unless-stopped
