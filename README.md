@@ -1,200 +1,426 @@
-# Advanced Programming Techniques Lab
-## Team Information
-Members: 
+# Smart Waste bin project
+
+A full-stack IoT pipeline that uses a Raspberry Pi 5 and a PIR motion sensor to create a smart waste bin system. The sensor detects motion inside the bin, streams events over MQTT, exposes them through a semantic REST API and visualizes them on a Home Assistant dashboard, all containerized with Docker Compose.
+
+### Advanced Programming Techniques - Team 6 - Final Project
+
+### Team Information
+
+Members:
+
 - Marios Ioannis Papadopoulos 1092834  
 - Filippos Neofytos Theologos 1092633  
 - Xristina Tzouda 1097346
 
 ---
-# SECTION A - RUNBOOK 
-## Nesessary hardware and software from previous labs
-- Hardware:
-  - Raspberry Pi 5
-  - HC-SR501 PIR motion sensor
-  - Jumper wires(female to female)
-- Wiring the sensor:
-  Use the example given on lab02, made sure to connect the OUT on the same pin.
-- Connection
-  As shown in lab01, in order to run the following code it's nesessary to connect to the raspberry pi 5 via ssh. Clear instructions can be found on lab01.
-- Software:
-  - The PIR sensor logic (`sampler.py`, `interpreter.py`) is reused from Lab 02 and placed inside `pirlib/`. 
-  - Use a venv just like lab01 and lab02.
-  - Make sure to inastall a `requirments.txt`.
-## Part 1 — Install and start Mosquitto
-On the laptop connected to the rpi run:
-```
-sudo apt-get update
-sudo apt-get install -y mosquitto mosquitto-clients
-```
-After installing Mosquito run this command in order to make sure it works :
-```
-systemctl status mosquitto
-```
-This should give *Active : Active (running)* as a result.
-## Part 2 — Explore MQTT from the terminal
-1. Open 2 terminals (both connected to the rpi):
-  1. Start a subscriber :
- ```
- mosquitto_sub -h localhost -t "test/hello"
-```
-  3. In the second terminal publish th following message :
-```
-mosquitto_pub -h localhost -t "test/hello" -m "world"
-```
-Correct output: "world" appears on the subscriber's terminal.
-## Topic hierarchy :
-   1. On the subscriber's terminal write :
-```
-mosquitto_sub -h localhost -t "smartbin/pir-01/motion"
-```
-  2. On the publisher's terminal type:
-```
-mosquitto_pub -h localhost -t "smartbin/pir-01/motion" -m '{"state": "detected"}'
-```
-By this, it is clear that  MQTT does not care about the format, it just delivers bytes.
 
-## Wildcards: 
-With the subscriber still running, try these in separate terminals. On the first:
-```
-# Subscribe to ALL topics under smartbin/pir-01/
-mosquitto_sub -h localhost -t "smartbin/pir-01/#"
-```
-On the second :
-```
-# Subscribe to motion events from ANY device
-mosquitto_sub -h localhost -t "smartbin/+/motion"
-```
-In another terminal, publish to different topics and see which subscribers receive what:
-```
-mosquitto_pub -h localhost -t "smartbin/pir-01/motion" -m "detected"
-mosquitto_pub -h localhost -t "smartbin/pir-01/status" -m "online"
-mosquitto_pub -h localhost -t "smartbin/pir-02/motion" -m "detected"
-mosquitto_pub -h localhost -t "smartbin/ultrasonic-01/fill" -m "72"
-```
-## QoS levels
-- Publish different Quality of Service levels :
-```
-# QoS 0: at most once (fire and forget)
-mosquitto_pub -h localhost -t "test/qos" -m "qos0 message" -q 0
+# RUNBOOK
 
-# QoS 1: at least once (acknowledged)
-mosquitto_pub -h localhost -t "test/qos" -m "qos1 message" -q 1
+## Repository Structure
 
-# QoS 2: exactly once (four-step handshake)
-mosquitto_pub -h localhost -t "test/qos" -m "qos2 message" -q 2
 ```
-With a subscriber listening on test/qos, all three should arrive. 
-By testing these we decided to use QoS 1 for our project.
-## Retained messages
-1. Publish a retained message :
-```
-mosquitto_pub -h localhost -t "smartbin/pir-01/status" -m "online" -r
-```
-2. Start a new subscriber after the publish:
-```
-mosquitto_sub -h localhost -t "smartbin/pir-01/status"
-```
-The subscriber immediately receives themessage when it is online even though it was published before it connected. 
-## Part 3 — Split the pipeline into publisher and subscriber
-# Install the Python MQTT library
-- Add paho-mqtt to the `requirments.txt`.
-- Then install it by running:
-```
-pip install paho-mqtt
-```
-# Topic stracture 
-The topic stracture we used is :
-```
-environments/environment-01/wastebins/wastebin-01/sensors/pir-01/events
+smart-waste-bin/
+├── api.py                      # Flask REST API with Swagger UI
+├── producer.py                 # MQTT publisher — reads PIR sensor
+├── consumer.py                 # MQTT subscriber — writes events.jsonl
+├── analyze.py                  # Seaborn analytics script
+├── asyncapi.yaml               # AsyncAPI specification for MQTT interface
+├── train_model.py              # ML model training script
+├── virtual_sensor_ml.py        # ML-based virtual sensor
+├── virtual_sensor_rules.py     # Rule-based virtual sensor
+├── requirements.txt            # Python dependencies
+├── Dockerfile                  # Container image definition
+├── docker-compose.yml          # Multi-service orchestration
+├── .dockerignore
+├── .gitignore
+├── data/
+│   ├── charts/                 # Generated Seaborn charts
+│   ├── consumer/               # Consumer event logs (events.jsonl)
+│   ├── homeassistant/          # Home Assistant data
+│   └── nodered/                # Node-RED event logs
+├── models/                     # JSON-LD semantic models
+│   ├── context.jsonld
+│   ├── wastebin.jsonld
+│   ├── sensor.jsonld
+│   ├── environment.jsonld
+│   └── busy_predictor.joblib   # Trained ML model
+├── pirlib/                     # PIR sensor library
+│   ├── sampler.py
+│   └── interpreter.py
+└── docs/
+    └── ontology.md             # Semantic models and ontology documentation
 ```
 
-# Run the `producer.py` and `consumer.py`
-- Using the pseudocode given, we wrote the necessary code.
-- Connect to the rpi using the instructions given on lab01 and made sure we have enabled the `venv`.
-- On one terminal, run the consumer:
-```
-python consumer.py --broker localhost --topic "smartbin/bin-01/pir-01/events" --out events.jsonl --verbose
-```
-- On another terminal run the producer:
-```
-python producer.py --broker localhost --topic smartbin/bin-01/pir-01/events --pin 17 --verbose
-```
-- Output example, both consumer and producer are online:
-```
-[producer] broker=localhost:1883 topic=smartbin/bin-01/pir-01/events qos=0 device=pir-motion-sensor-01 pin=17 interval=0.1s cooldown=5.0s min_high=0.0s duration=60.0s
-[producer] published seq=1 topic=smartbin/bin-01/pir-01/events state=detected event_time=2026-04-26T09:24:56.982Z
-[producer] published seq=2 topic=smartbin/bin-01/pir-01/events state=detected event_time=2026-04-26T09:25:03.887Z
-[producer] published seq=3 topic=smartbin/bin-01/pir-01/events state=detected event_time=2026-04-26T09:25:11.192Z
-[producer] published seq=4 topic=smartbin/bin-01/pir-01/events state=detected event_time=2026-04-26T09:25:16.195Z
-[producer] published seq=5 topic=smartbin/bin-01/pir-01/events state=detected event_time=2026-04-26T09:25:21.200Z
-[producer] published seq=6 topic=smartbin/bin-01/pir-01/events state=detected event_time=2026-04-26T09:25:28.705Z
-[producer] published seq=7 topic=smartbin/bin-01/pir-01/events state=detected event_time=2026-04-26T09:25:36.110Z
-[producer] published seq=8 topic=smartbin/bin-01/pir-01/events state=detected event_time=2026-04-26T09:25:50.519Z
-[producer] done. produced=8 dropped=0
-```
-- Event logger(JSONL)
-```
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:22.096Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 4, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:27.800Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 5, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:35.005Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 6, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:42.010Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 7, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:47.014Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 8, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
-```
-- Output example, producer online - consumer offline
-![alt text](con_off.png)
-![alt text](con_off_1.png)
+## Architecture Overview
 
-- Output example : Run the consumer with a wildcard topic
-
-
-
-
-# Part 4 — Containerize with Docker Compose 
-Like it was shown in lab04
-
----
-# SECTION B - REPORT
-## RQ1
-The broker is a middleman that receives published messages and forwards them to subscribers. Without it, the producer would need to know the consumer's address, both would need to run simultaneously, and adding a second consumer would require changing the producer. The broker removes all these dependencies.
-## RQ2
-`smartbin/<bin-id>/<sensor-id>/events`. The hierarchy goes location → device → type, enabling wildcards like `smartbin/bin-01/#` which gives us all data from one bin or `smartbin/+/pir-01/events`which means pir-01 across all bins, new sensors and bins can be added without changing existing subscribers.
-## RQ3
-- QoS 0: At most once. The broker delivers the message once with no acknowledgement. Messages can be lost if the network drops.
-- QoS 1: At least once. The broker acknowledges receipt of the message. If the acknowledgment is lost, the message is retransmitted, which may result in duplicate messages, but delivery is guaranteed at least once.
-- QoS 2 : Exactly once. A four-step handshake ensures that the message is delivered exactly once, without duplicates. It is the safest level but also the slowest due to the additional overhead.
-
-We used QoS 1 for motion events because it guarantees delivery while keeping latency and overhead low. Although duplicates may occur, they can be handled by the application, making it a good balance between reliability and performance.
-## RQ4
-A retained message is stored by the broker and delivered immediately to any new online subscriber. In our project it can be used so that the user knows the remaining capacity of the bin. Even though the subscriber might be offline the message won't be lost.  
-## RQ5
-`smartbin/+/motion` received messages on `smartbin/pir-01/motion` and `smartbin/pir-02/motion`, but not `smartbin/pir-01/status` or `smartbin/ultrasonic-01/fill`. The `+` wildcard matches exactly one level, so only topics with that exact three-level structure and motion at the end matched.
-## RQ6
-`#` received everything flowing through the broker. It's useful for debugging because you see all traffic without knowing topic names.
-## RQ7
-No. Without the retain flag, the broker discards messages if no subscriber is currently connected. MQTT doesn't queue messages for future subscribers by default.
-## RQ8
-In the threaded version, producer and consumer share a Python Queue in the same process and must start/stop together. In the MQTT version they are separate processes communicating through the broker, can run independently, on different machines, and multiple consumers are supported with no code changes.
-## RQ9
-In the threaded version, a full queue blocked or dropped messages directly in the producer. In the MQTT version, the producer is unaffected, it publishes to the broker regardless.  If the consumer is offline , with QoS 1,  by default all messages will be lost.
-## RQ10
-Polling `queue.get(timeout=0.5)` has the consumer doing loops every 0.5 seconds, whether there was motion detectd or not. The callback pattern (on_message) is passive which means the consumer registers a function and paho-mqtt calls it automatically when a message arrives. 
-## RQ11
 ```
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:22.096Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 4, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:27.800Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 5, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:35.005Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 6, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:42.010Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 7, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
-{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-04-25T17:21:47.014Z", "device_id": "urn:dev:team-06:pir-motion-sensor-01", "wastebin_id": "urn:dev:team-06:wastebin-01", "environment_id": "urn:dev:team-06:environment-01", "event_type": "motion", "motion_state": "detected", "seq": 8, "run_id": "44135bee-992c-4341-b8ea-72227b912cf2"}
+
+                         +---------------------------+
+                         |      Raspberry Pi 5       |
+                         |  HC-SR501 · producer.py   |
+                         +-------------+-------------+
+                                       |
+                                  MQTT QoS 1
+                                       |
+                         +-------------+-------------+
+                         |      Mosquitto Broker      |
+                         |     Docker · port 1883     |
+                         +--+------+--------+------+--+
+                            |      |        |      |
+              ┌─────────────┘      |        |      └─────────────┐
+              |                    |        |                     |
+              v                    v        v                     v
+  +--------------+    +----------+  +---------------+  +------------------+
+  | consumer.py  |    | Node-RED |  |Virtual sensors|  | Home Assistant   |
+  | events.jsonl |    | port 1881|  | rules · ML    |  | port 8124        |
+  +--------------+    +----+-----+  +-------+-------+  +------------------+
+         |                 |                |
+         |            republish         publish
+         |            alerts            predictions
+         |                 \                /
+         |                  v              v
+         |               +-----+----+--------+
+         |               |  Mosquitto Broker  |
+         |               +-------------------+
+         v
+  +------------+      +------------------+
+  | Flask API  |      |    Analytics     |
+  | port 5001  |  +   |  analyze.py      |
+  +------------+      +------------------+
+
+  +------------------------------------------+
+  | Simulated producers (wastebin-02, 03, 04) |
+  +------------------------------------------+
 ```
-The JSON structure is identical to previous labs.
-## RQ12
-With a persistent session (clean_session=False) and QoS 1, the broker queues the messages and delivers the time the consumer reconnects.
-## RQ13
-Yes, both received every message because the broker fans out to all matching subscribers. This matters because you can add consumer independently without modifying the producer or any other consumer.
-## RQ14
-Yes. You'd need to make some changes so that the Mosquitto can connect to all interfaces not just localhost, and point the consumer's `--broker` argument to the rpi's IP address.
-## RQ15
-Decoupling means producer and consumer share no direct connection only a topic name and message format.
-## RQ16
-If the broker crashes, the pipeline stops entirely and in-flight messages are lost.
+
+- `producer.py`: Runs on the Raspberry Pi, reads the PIR sensor, and publishes motion events to the MQTT broker.
+- `consumer.py`: Subscribes to the MQTT topic, processes incoming events, and saves them to `events.jsonl`.
+- `api.py`: A Flask REST API that serves the collected events from the consumer and provides endpoints with full Swagger documentation.
+- `Node-RED`: Acts as a stream-processing layer that performs logic such as event aggregation, threshold detection, and alert generation.
+- `Home Assistant`: Provides real-time visualization, dashboards, and notifications based on processed and real - time incoming events.
+
+## Necessary Hardware
+
+- Raspberry pi 5
+- HC-SR501 PIR motion sensor
+- Jumper wires (female to female)
+
+## Wiring Diagram
+
+```
+PIR Sensor        Raspberry Pi
+-----------       -------------
+VCC  -----------> 5V
+GND  -----------> GND
+OUT  -----------> GPIO17
+```
+
+- In this project it was used :
+- Physical pin 2 for VCC (5V)
+- Physical pin 6 for GND (Ground)
+- Physical pin 11 for OUT (GPIO17)
+
+* If the user wants to use different GPIO pin for the OUT connection, they need to change the `--pin` argument in the `docker-compose.yml` file.
+
+## Software Setup
+
+The laptop or computer that is used to connect to the Raspberry Pi must have python 3.12 or higher installed in order for all the scripts to work. The Raspberry Pi must have python 3.12 or higher installed as well.
+
+## Step 1: Connect to the Raspberry Pi
+
+1. Enable ssh on the Raspberry Pi. On a terminal on the Raspberry run :
+
+```
+sudo raspi-config
+```
+
+Then navigate to `Interface Options` -> `SSH` -> `Enable` and exit the configuration tool.
+
+2. Verify ssh works. On a terminal on the Raspberry run :
+
+```
+systemctl status ssh
+```
+
+Result should be **active (running)**.
+
+3. Connect to Raspberry Pi by using SSH. In order to do that a user must do wifi hotspot to the Raspberry Pi from their laptop or computer. From the terminal of your computer run the following command:
+
+```
+ssh hostname@<Raspberry_Pi_IP_ADDRESS>
+```
+
+In order to find the IP address and the hostname of the Raspberry Pi, you can run the following commands on the Raspberry Pi terminal:
+
+```
+hostname
+ip a
+```
+
+- The hostname is the name of the Raspberry Pi and is used in the ssh command. 
+- The IP address should be in the form of `192.168.x.x` and is the ip address of the laptop that is doing hotspot to the Raspberry Pi.
+
+4. It requires the password of the Raspberry Pi user,by default. 
+The default username is `pi` and the default password is `raspberry`. If changed put the new ones.
+5. In order to verify that the connection was successful, run the following command on the laptop connected to the Raspberry Pi terminal:
+
+```
+whoami
+```
+The result should be the same as the username of the Raspberry Pi user(the one used on the ssh command).
+
+## Step 2: Clone the repository
+
+On the laptop connected to the Raspberry pi, open a terminal and run the following command:
+
+```
+git clone https://github.com/johnmarios/smart-waste-bin.git
+```
+
+This will clone the repository to the raspberry pi. Then navigate to the cloned repository:
+
+```
+cd smart-waste-bin
+```
+
+## Step 3: Create a Python virtual environment
+
+On the computer connected to the Raspberry Pi terminal, run the following command to create a Python virtual environment:
+
+```
+python3 -m venv venv
+```
+
+Then activate the virtual environment by running the following command:
+
+```
+source venv/bin/activate
+```
+
+After activation the terminal prompt should show (venv) at the beginning.
+
+## Step 4: Install the required Python packages
+
+Make sure you are in the virtual environment and run the following command to install the required Python packages:
+
+```
+pip install -r requirements.txt
+```
+
+This will install all the required packages for the project.
+
+- The needed packages are:
+  - Hardware: gpiozero, rpi-lgpio — GPIO control for the PIR sensor
+  - MQTT: paho-mqtt — MQTT client for publishing and subscribing
+  - API: flask, flask-restx — REST API framework with Swagger UI
+  - ML: numpy, pandas, scikit-learn, joblib — data processing and ML model
+
+## Step 5: Docker installation
+
+- If the docker is installed run  on a terminal on the computer connected to the Raspberry Pi:
+
+```
+docker --version
+docker compose version
+```
+
+- If it is not intalled run :
+
+```
+curl -fsSL https://get.docker.com | sh
+```
+
+- By default every docker command would need sudo. To fix that, add your user to the docker group:
+
+```
+sudo usermod -aG docker $USER
+```
+
+- This change only takes effect in new login sessions. To confirm it worked, after logging back in run:
+
+```
+groups
+```
+
+- Then run :
+
+```
+docker run hello-world
+```
+
+- If you see a success message, Docker is installed and your user has the correct permissions.
+
+## Step 6: Run the Docker Compose setup
+
+- After installing Docker, you can run the entire application stack using Docker Compose. In the terminal of the computer connected to the Raspberry Pi, navigate to the project directory and run:
+
+```
+docker compose up
+```
+
+This command will build and start all the services defined in the `docker-compose.yml` file:
+
+- **broker** — Mosquitto MQTT broker
+- **api** — Flask REST API on port 5001
+- **consumer** — main consumer, writes to `data/consumer/events.jsonl`
+- **consumer-slow** — second consumer with delay, writes to `data/consumer-slow/events-slow.jsonl`
+- **producer** — reads the physical PIR sensor on GPIO17
+- **producer-sim-02** — simulated producer for wastebin-02
+- **producer-sim-03** — simulated producer for wastebin-03
+- **producer-sim-04** — simulated producer for wastebin-04
+- **node-red** — Node-RED on port 1881
+- **homeassistant** — Home Assistant on port 8124
+- **virtual-sensor-ml-1** — ML virtual sensor for wastebin-01
+- **virtual-sensor-ml-2** — ML virtual sensor for wastebin-02
+- **virtual-sensor-rules-wastebin-01** — rule-based virtual sensor for wastebin-01
+- **virtual-sensor-rules-wastebin-02** — rule-based virtual sensor for wastebin-02
+- **analytics** — runs `analyze.py` and generates charts in `data/charts/`
+
+You should see logs from all services in the terminal.
+
+- In case you want to run each script separately you can run the following command:
+
+```
+docker compose up --build <service>
+```
+
+Where `<service>` can be found in the `docker-compose.yml` file.
+For example if you want to run the `producer.py` script , you have to run:
+
+```
+docker compose up --build broker producer
+```
+
+## Step 7: Access the services
+
+- **Home Assistant** dashboard: `http://<Raspberry_Pi_IP_ADDRESS>:8124`
+- **Node-RED** editor: `http://<Raspberry_Pi_IP_ADDRESS>:1881`
+- **Node-RED** dashboard: `http://<Raspberry_Pi_IP_ADDRESS>:1881/dashboard`
+
+## Step 8: Access the API
+
+- The API service will be available at `http://<Raspberry_Pi_IP_ADDRESS>:5001` (This is the ip of the laptop  used to connect to the raspberry pi via ssh).
+- It provides the following endpoints:
+  - Event retrieval endpoints
+  - System status endpoint
+  - Full Swagger UI documentation
+
+## Example output
+
+Write the following command in order to run the producer and the consumer. In case of a new raspberry pi navigate to your own path:
+```
+iotlab_upat_6@iotlab-Upat-6:~/team/project/smart-waste-bin $ docker compose up broker consumer producer
+```
+The terminal should look like this :
+```
+[+] up 3/5
+[+] up 3/5... Created                                                   0.1s
+[+] up 3/5... Created                                                   0.1s
+[+] up 7/7... Created                                                   0.1s
+ ✔ Network... Created                                                   0.1s
+ ✔ Contain... Created                                                   0.2s
+ ! broker     Your kernel does not support memory limit capabilities or the cgroup is not mounted. Limitation discarded. 0.0s                       0.3s
+ ✔ Contain... Created                                                   0.3s
+ ✔ Contain... Created                                                   0.3s
+ ! producer   Your kernel does not support memory limit capabilities or the cgroup is not mounted. Limitation discarded. 0.0s
+ ! consumer   Your kernel does not support memory limit capabilities or the cgroup is not mounted. Limitation discarded. 0.0s
+Attaching to iot-broker, iot-consumer, iot-producer
+iot-broker  | 1780156974: Info: running mosquitto as user: mosquitto.
+iot-broker  | 1780156974: mosquitto version 2.1.2 starting
+iot-broker  | 1780156974: Config loaded from /mosquitto/config/mosquitto.conf.
+iot-broker  | 1780156974: Bridge support available.
+iot-broker  | 1780156974: Persistence support available.
+iot-broker  | 1780156974: TLS support available.
+iot-broker  | 1780156974: TLS-PSK support available.
+iot-broker  | 1780156974: Websockets support available.
+iot-broker  | 1780156974: Opening ipv4 listen socket on port 1883.
+iot-broker  | 1780156974: Opening ipv6 listen socket on port 1883.
+iot-broker  | 1780156974: mosquitto version 2.1.2 running
+iot-consumer  | [consumer-storage] broker=broker:1883 topic=environments/+/wastebins/+/sensors/+/# qos=1 duration=3000.0s out=/data/events.jsonl delay=0.0s cache=100
+iot-broker    | 1780156975: New connection from 172.21.0.4:38505 on port 1883.
+iot-broker    | 1780156975: New client connected from 172.21.0.4:38505 as consumer-main (p4, c0, k60).
+iot-consumer  | [consumer] subscribed topic=environments/+/wastebins/+/sensors/+/#
+iot-producer  | /usr/local/lib/python3.11/site-packages/gpiozero/devices.py:300: PinFactoryFallback: Falling back from lgpio: 'can not open gpiochip'
+iot-producer  |   warnings.warn(
+iot-producer  | [producer] broker=broker:1883 topic=environments/environment-01/wastebins/wastebin-01/sensors/pir-motion-sensor-01/events qos=1 device=pir-motion-sensor-01 pin=17 interval=0.2s cooldown=5.0s min_high=0.5s duration=3000.0s seq_start=0
+iot-broker    | 1780156975: New connection from 172.21.0.3:33275 on port 1883.
+iot-broker    | 1780156975: New client connected from 172.21.0.3:33275 as producer-main (p4, c0, k60).
+iot-broker    | 1780156982: New connection from 172.21.0.1:34420 on port 1883.
+iot-broker    | 1780156982: New client connected from 172.21.0.1:34420 as 2G2gbRFlEiph8CI059yjps (p4, c1, k60).
+iot-broker    | 1780156982: New connection from 172.21.0.1:34434 on port 1883.
+iot-broker    | 1780156982: New client connected from 172.21.0.1:34434 as noderedd062cdcc9cb70c3c (p4, c1, k60).
+```
+After the downloading is over the output is something like this:
+```
+iot-consumer  | [consumer-storage] wrote seq=0 bin=wastebin-01
+iot-producer  | [producer] published seq=0 topic=environments/environment-01/wastebins/wastebin-01/sensors/pir-motion-sensor-01/events state=clear event_time=2026-05-30T16:03:04.706Z
+iot-producer  | [producer] published seq=0 topic=environments/environment-01/wastebins/wastebin-01/sensors/pir-motion-sensor-01/events state=clear event_time=2026-05-30T16:03:14.713Z
+iot-consumer  | [consumer] duplicate record detected, dropping run_id=ad56d2b9-dfcd-4e8d-99f0-afe613edb445 seq=0
+iot-producer  | [producer] published seq=1 topic=environments/environment-01/wastebins/wastebin-01/sensors/pir-motion-sensor-01/events state=detected event_time=2026-05-30T16:03:50.137Z
+iot-consumer  | [consumer-storage] wrote seq=1 bin=wastebin-01
+iot-producer  | [producer] published seq=1 topic=environments/environment-01/wastebins/wastebin-01/sensors/pir-motion-sensor-01/events state=clear event_time=2026-05-30T16:03:50.338Z
+```
+
+## JSON Output
+
+In case of a new raspberry pi navigate to your own path
+
+1. Node-Red output :
+
+- Command:
+
+```
+iotlab_upat_6@iotlab-Upat-6:~/team/project/smart-waste-bin/data/nodered/logs $ cat detected_events_wastebin-01_red.jsonl
+```
+
+- Result :
+
+```
+{"@context":"models/context.jsonld","@type":"sosa:Observation","event_time":"2026-05-30T16:20:27.151Z","device_id":"pir-motion-sensor-01","wastebin_id":"wastebin-01","environment_id":"environment-01","event_type":"motion","motion_state":"detected","seq":1,"run_id":"d249a3ac-6251-48c4-9245-9abe844c61ca","latency_seconds":0.045}
+{"@context":"models/context.jsonld","@type":"sosa:Observation","event_time":"2026-05-30T16:20:41.161Z","device_id":"pir-motion-sensor-01","wastebin_id":"wastebin-01","environment_id":"environment-01","event_type":"motion","motion_state":"detected","seq":2,"run_id":"d249a3ac-6251-48c4-9245-9abe844c61ca","latency_seconds":0.047}
+```
+
+2. Consumer output:
+
+- Command :
+
+```
+iotlab_upat_6@iotlab-Upat-6:~/team/project/smart-waste-bin/data/consumer $ cat events.jsonl
+```
+
+- Result:
+
+```
+{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-05-30T16:21:43.951Z", "device_id": "pir-motion-sensor-02", "wastebin_id": "wastebin-02", "environment_id": "environment-01", "event_type": "motion", "motion_state": "detected", "seq": 19, "run_id": "12adea30-4ab2-4139-a357-81b8f1d0548f", "latency_seconds": 0.04312491416931152}
+{"@context": "models/context.jsonld", "@type": "sosa:Observation", "event_time": "2026-05-30T16:21:49.155Z", "device_id": "pir-motion-sensor-02", "wastebin_id": "wastebin-02", "environment_id": "environment-01", "event_type": "motion", "motion_state": "detected", "seq": 20, "run_id": "12adea30-4ab2-4139-a357-81b8f1d0548f", "latency_seconds": 0.04292416572570801}
+```
+
+## Home Assistant Dashboard
+
+![alt text](dashboard_ha.png)
+
+## Node-RED Dashboard and Flows
+
+- Flow:
+
+![alt text](flow.png)
+
+- Dashboard:
+![alt text](dash_node_1.png)
+![alt text](dash_node_2.png)
+
+## API screenshot
+
+- Picture of the API:
+![alt text](api_pic.png)
+- Example output from API:
+
+1. Press `GET /bins/`:
+![alt text](getbin.png)
+
+2. Output on terminal :
+
+```
+ api-project  | 192.168.137.1 - - [30/May/2026 16:13:57] "GET /bins/ HTTP/1.1" 200 -
+```
 
