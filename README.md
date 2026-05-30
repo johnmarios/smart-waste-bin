@@ -183,39 +183,7 @@ This will clone the repository to the raspberry pi. Then navigate to the cloned 
 cd smart-waste-bin
 ```
 
-## Step 3: Create a Python virtual environment
-
-On the computer connected to the Raspberry Pi terminal, run the following command to create a Python virtual environment:
-
-```
-python3 -m venv venv
-```
-
-Then activate the virtual environment by running the following command:
-
-```
-source venv/bin/activate
-```
-
-After activation the terminal prompt should show (venv) at the beginning.
-
-## Step 4: Install the required Python packages
-
-Make sure you are in the virtual environment and run the following command to install the required Python packages:
-
-```
-pip install -r requirements.txt
-```
-
-This will install all the required packages for the project.
-
-- The needed packages are:
-  - Hardware: gpiozero, rpi-lgpio — GPIO control for the PIR sensor
-  - MQTT: paho-mqtt — MQTT client for publishing and subscribing
-  - API: flask, flask-restx — REST API framework with Swagger UI
-  - ML: numpy, pandas, scikit-learn, joblib — data processing and ML model
-
-## Step 5: Docker installation
+## Step 3: Docker installation
 
 - If the docker is installed run  on a terminal on the computer connected to the Raspberry Pi:
 
@@ -250,12 +218,17 @@ docker run hello-world
 
 - If you see a success message, Docker is installed and your user has the correct permissions.
 
-## Step 6: Run the Docker Compose setup
+## Step 4: Run the Docker Compose setup
 
 - After installing Docker, you can run the entire application stack using Docker Compose. In the terminal of the computer connected to the Raspberry Pi, navigate to the project directory and run:
 
 ```
 docker compose up
+```
+The first time you run it you need to type this command:
+
+```
+docker compose up --build 
 ```
 
 This command will build and start all the services defined in the `docker-compose.yml` file:
@@ -281,23 +254,23 @@ You should see logs from all services in the terminal.
 - In case you want to run each script separately you can run the following command:
 
 ```
-docker compose up --build <service>
+docker compose up  <service name>
 ```
 
-Where `<service>` can be found in the `docker-compose.yml` file.
+Where `<service name>` can be found in the `docker-compose.yml` file.
 For example if you want to run the `producer.py` script , you have to run:
 
 ```
-docker compose up --build broker producer
+docker compose up  broker producer
 ```
 
-## Step 7: Access the services
+## Step 5: Access the services
 
 - **Home Assistant** dashboard: `http://<Raspberry_Pi_IP_ADDRESS>:8124`
 - **Node-RED** editor: `http://<Raspberry_Pi_IP_ADDRESS>:1881`
 - **Node-RED** dashboard: `http://<Raspberry_Pi_IP_ADDRESS>:1881/dashboard`
 
-## Step 8: Access the API
+## Step 6: Access the API
 
 - The API service will be available at `http://<Raspberry_Pi_IP_ADDRESS>:5001` (This is the ip of the laptop  used to connect to the raspberry pi via ssh).
 - It provides the following endpoints:
